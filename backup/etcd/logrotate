@@ -1,0 +1,7 @@
+/var/log/*backup_etcd.log {
+    missingok
+    notifempty
+    size 90M
+    weekly
+    create 0600 root root
+}
