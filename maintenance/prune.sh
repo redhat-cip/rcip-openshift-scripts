@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#crontab : */30 * * * * bash /opt/rcip-openshift-scripts/maintenance/prune.sh
+
 LOGFILE='/tmp/prune.log'
 
 function datenow {
