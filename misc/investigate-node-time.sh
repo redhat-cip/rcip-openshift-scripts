@@ -42,6 +42,9 @@ while true;do
     if echo ${OUTPUT} | grep -q "Successfully pushed";then
         echo "Success: ${OUTPUT}"
         break
+    elif echo ${OUTPUT} | grep -q "Build error";then
+        echo "Failure ${OUTPUT}"
+        break
     fi
     echo "Waiting: ${OUTPUT}"
     sleep 5
