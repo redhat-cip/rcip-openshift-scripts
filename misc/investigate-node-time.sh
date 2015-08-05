@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 # based on DNS convention using a defaultdomain you can override with switch
 
-defaultdomain=$(oc project|sed 's/.*on server.*https:\/\///;s/:.*//')
+default_domain=$(oc project|sed 's/.*on server.*https:\/\///;s/:.*//')
 default_builder_hosts="node1 node2"
-buildname=simple-test
+default_buildname=simple-test
 quiet=no
 
-while getopts ":qd:" opt; do
+while getopts ":qd:b:" opt; do
   case $opt in
+    b)
+      buildname=${OPTARG}
+      ;;
     d)
-        domain=${OPTARG}
+      domain=${OPTARG}
       ;;
     q)
       quiet=;
@@ -36,11 +39,11 @@ function run() {
     local on_host=$1
 
     oc delete builds --all >/dev/null
-    B=$(oc start-build ${buildname})
+    B=$(oc start-build ${buildname:-$default_buildname})
     BP=$(oc get pod|grep build|awk '{print $1}')
     Host=$(oc describe pod $BP|grep Node:|${SED} -r 's/Node:[ \t]*//;s,/.*,,')
 
-    if [[ -n ${on_host} && ${on_host}.${domain:-$defaultdomain} != ${Host} ]];then
+    if [[ -n ${on_host} && ${on_host}.${domain:-$default_domain} != ${Host} ]];then
         oc cancel-build ${B} >/dev/null
         return 1
     fi
