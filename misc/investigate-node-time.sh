@@ -1,5 +1,9 @@
 #!/bin/bash
 buildname=simple-test
+quiet=no
+
+[[ $1 == "-q" ]] && { quiet=; shift ;}
+
 force_on=$1 # define a node name here if we need to
 
 function red() { echo -e "\e[31m$@\e[0m"  ;}
@@ -29,20 +33,23 @@ while true;do
     fi
 done
 
-echo "Started around: $(date)"
-echo "Running on ${Host}"
+if [[ -n ${quiet} ]];then
+    echo "Started around: $(date)"
+    echo "Running on ${Host}"
 
-echo -n "Waiting that the build ${BP} started: "
+    echo -n "Waiting that the build ${BP} started: "
+fi
+
 
 while :;do
     running=$(oc get pod ${BP}|grep Running)
    [[ -n ${running} ]] && break
     sleep 2
-    echo -n "."
+   [[ -n ${quiet} ]] &&  echo -n "."
 done
-echo ". success"
+[[ -n ${quiet} ]] && echo ". success"
 
-echo "Wait that the build ${BP} has succeded":
+[[ -n ${quiet} ]] && echo "Wait that the build ${BP} has succeded":
 while true;do
     OUTPUT=$(oc build-logs ${B} |tail -n1)
     if echo ${OUTPUT} | grep -q "Successfully pushed";then
@@ -56,4 +63,4 @@ while true;do
     sleep 5
 done
 
-echo "End at: $(date)"
+[[ -n ${quiet} ]] && echo "End at: $(date)"
