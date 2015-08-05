@@ -1,0 +1,195 @@
+#!/usr/bin/env python
+# Description: OpenShift uninstaller
+# Author: Morgan Weetman <mweetman@redhat.com>
+# License:
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Version: 20150804
+# https://people.redhat.com/mweetman/scripts/ose3_uninstall
+
+import os
+import yaml
+import subprocess
+from sys import argv
+import getopt
+
+
+# package lists
+node_pkgs = ['docker', 'openshift-sdn-ovs', 'openvswitch', 'openshift-node', 'openshift', 'socat', 'tuned-profiles-openshift-node']
+master_pkgs = ['openshift-master', 'openshift', 'pcs', 'pacemaker', 'pacemaker-libs', 'pacemaker-cli', 'pacemaker-cluster-libs', 'corosync', 'corosynclib', 'libqb', 'sbd', 'resource-agents', 'python-clufter']
+
+
+# directory lists
+master_dirs = []
+master_dirs.append(os.path.join(os.path.expanduser("~"), '.config/openshift'))
+master_dirs.append(os.path.join(os.path.expanduser("~"), '.kube/config'))
+master_dirs.append('/root/.config/openshift')
+master_dirs.append('/home/cloud-user/.config/openshift')
+master_dirs.append('/etc/ansible')
+master_dirs.append('/etc/openshift/master')
+master_dirs.append('/etc/openshift/generated-configs')
+master_dirs.append('/etc/sysconfig/openshift-master.rpmsave')
+master_dirs.append('/etc/corosync')
+master_dirs.append('/var/lib/pacemaker')
+
+node_dirs = []
+node_dirs.append('/etc/openshift/node')
+node_dirs.append('/etc/ansible')
+node_dirs.append('/etc/openshift-sdn')
+node_dirs.append('/etc/openvswitch')
+node_dirs.append('/var/lib/openvswitch')
+node_dirs.append('/var/lib/openshift')
+node_dirs.append('/var/lib/docker')
+node_dirs.append('/usr/lib/docker-storage-setup')
+node_dirs.append('/etc/sysconfig/docker.rpmsave')
+node_dirs.append('/etc/sysconfig/docker-storage-setup')
+node_dirs.append('/etc/sysconfig/docker-storage.rpmsave')
+node_dirs.append('/etc/sysconfig/openshift-node.rpmsave')
+
+install_file = os.path.join(os.path.expanduser("~"), '.config/openshift/installer.cfg.yml')
+
+
+def usage():
+  print('Usage: %s OPTIONS' % argv[0])
+  print('\nOPTIONS:')
+  print(' [-h|--help]        print this message')
+  print(' [-m|--masters]     list of masters')
+  print(' [-n|--nodes]       list of nodes')
+  print(' [-v|--verbose]     list of nodes')
+
+
+def main():
+  try:
+    opts, args = getopt.getopt(argv[1:], "hm:n:v", ["help", "masters=", "nodes=", "verbose"])
+  except getopt.GetoptError, err:
+    print(str(err))
+    usage()
+    return 3
+
+  host_data = {}
+  verbose = False
+
+  for opt, arg in opts:
+    if opt in ("-h", "--help"):
+      usage()
+      return 0
+    elif opt in ("-m", "--masters"):
+      masters = arg
+    elif opt in ("-n", "--nodes"):
+      nodes = arg
+    elif opt in ("-v", "--verbose"):
+      verbose = True
+    else:
+      assert False, '<*> unhandled option'
+      return 3
+
+  # ensure we are defined
+  try:
+    masters
+  except:
+    masters = ""
+  
+  try:
+    nodes
+  except:
+    nodes = ""
+  
+  # if masters or nodes was not provided, obtain automatically or prompt
+  if (not masters) or (not nodes): 
+    try:
+      # try to populate masters and nodes automatically from installer yaml
+	    yaml_data = open(install_file, 'r').read()
+	    installer_data = yaml.load(yaml_data)
+    except IOError:
+      # .. no good, prompt for input instead
+      # (We handle comma or space separated inputs)
+      if not masters: 
+        print("[!] unable to generate master list automatically")
+        masters = raw_input("... please enter the masters: ")
+
+      if not nodes: 
+        print("[!] unable to generate node list automatically")
+        nodes = raw_input("... please enter the nodes: ")
+
+  if ',' in masters:
+    host_data['masters'] = masters.split(',')
+  else:
+    host_data['masters'] = masters.split()
+  if ',' in nodes:
+    host_data['nodes'] = nodes.split(',')
+  else:
+    host_data['nodes'] = nodes.split()
+  
+
+  # process each master
+  for host in host_data['masters']:
+    print("[*] processing master: %s" % host)
+    print("... stopping services")
+    process = subprocess.Popen("ssh -q -t %s sudo systemctl stop openshift-master" % host, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output,stderr = process.communicate()
+    status = process.poll()
+    if verbose:
+      print(output)
+
+    print("... removing packages")
+    process = subprocess.Popen("ssh -q -t %s sudo yum -y erase %s" % (host, ' '.join(master_pkgs)), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output,stderr = process.communicate()
+    status = process.poll()
+    if verbose:
+      print(output)
+
+    print("... deleting directories")
+    process = subprocess.Popen("ssh -q -t %s sudo rm -rf %s" % (host, ' '.join(master_dirs)), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output,stderr = process.communicate()
+    status = process.poll()
+    if verbose:
+      print(output)
+
+
+  # process each node
+  for host in host_data['nodes']:
+    print("[*] processing node: %s" % host)
+    print("... stopping services")
+    process = subprocess.Popen("ssh -q -t %s sudo systemctl stop openshift-node" % host, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output,stderr = process.communicate()
+    status = process.poll()
+    if verbose:
+      print(output)
+
+    print("... removing packages")
+    process = subprocess.Popen("ssh -q -t %s sudo yum -y erase %s" % (host, ' '.join(node_pkgs)), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output,stderr = process.communicate()
+    status = process.poll()
+    if verbose:
+      print(output)
+
+    print("... deleting directories")
+    process = subprocess.Popen("ssh -q -t %s sudo rm -rf %s" % (host, ' '.join(node_dirs)), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output,stderr = process.communicate()
+    status = process.poll()
+    if verbose:
+      print(output)
+
+    print("... deleting docker logical volume")
+    process = subprocess.Popen('ssh -q -t %s -- "find /dev -regex \'.*docker-pool\' | xargs -r sudo lvremove -f"' % host, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output,stderr = process.communicate()
+    status = process.poll()
+    if verbose:
+      print(output)
+
+
+if __name__ == "__main__":
+  rc = main()
+  exit(rc)
+
