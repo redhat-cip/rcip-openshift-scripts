@@ -53,10 +53,10 @@ done
 while true;do
     OUTPUT=$(oc build-logs ${B} |tail -n1)
     if echo ${OUTPUT} | grep -q "Successfully pushed";then
-        green "Success: ${OUTPUT}"
+        green "${Host}:Success: ${OUTPUT}"
         break
     elif echo ${OUTPUT} | grep -q "Build error";then
-        red "Failure ${OUTPUT}"
+        red "${Host}: Failure ${OUTPUT}"
         break
     fi
     echo "Waiting: ${OUTPUT}"
