@@ -8,6 +8,8 @@ force_on=$1 # define a node name here if we need to
 
 function red() { echo -e "\e[31m$@\e[0m"  ;}
 function green() { echo -e "\e[32m$@\e[0m"  ;}
+function whiteb() { echo -e "\e[1;37m$@\e[0m"  ;}
+
 
 SED=sed
 type -p gsed >/dev/null 2>/dev/null && SED=gsed
@@ -34,7 +36,7 @@ while true;do
 done
 
 if [[ -n ${quiet} ]];then
-    echo "Started around: $(date)"
+    whiteb "Started around: $(date)"
     echo "Running on ${Host}"
 
     echo -n "Waiting that the build ${BP} started: "
@@ -63,4 +65,4 @@ while true;do
     sleep 5
 done
 
-[[ -n ${quiet} ]] && echo "End at: $(date)"
+[[ -n ${quiet} ]] && whiteb "End at: $(date)"
