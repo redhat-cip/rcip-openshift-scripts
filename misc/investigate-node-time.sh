@@ -1,18 +1,33 @@
 #!/usr/bin/env bash
-defaultdomain=axa.enoshift.com
+# based on DNS convention using a defaultdomain you can override with switch
+
+defaultdomain=$(oc project|sed 's/.*on server.*https:\/\///;s/:.*//')
 default_builder_hosts="node1 node2"
 buildname=simple-test
 quiet=no
 
-[[ $1 == "-q" ]] && { quiet=; shift ;}
+while getopts ":qd:" opt; do
+  case $opt in
+    d)
+        domain=${OPTARG}
+      ;;
+    q)
+      quiet=;
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
 
-force_on=$1 # define a node name here if we need to
+shift $((OPTIND-1))
+
+force_on=$@ # define a node name here if we need to
 
 function red() { echo -e "\e[31m$@\e[0m"  ;}
 function green() { echo -e "\e[32m$@\e[0m"  ;}
 function whiteb() { echo -e "\e[1;37m$@\e[0m"  ;}
 function cyan() { echo -e "\e[36m$@\e[0m"  ;}
-
 
 SED=sed
 type -p gsed >/dev/null 2>/dev/null && SED=gsed
@@ -25,7 +40,7 @@ function run() {
     BP=$(oc get pod|grep build|awk '{print $1}')
     Host=$(oc describe pod $BP|grep Node:|${SED} -r 's/Node:[ \t]*//;s,/.*,,')
 
-    if [[ -n ${on_host} && ${on_host}.${defaultdomain} != ${Host} ]];then
+    if [[ -n ${on_host} && ${on_host}.${domain:-$defaultdomain} != ${Host} ]];then
         oc cancel-build ${B} >/dev/null
         return 1
     fi
@@ -75,6 +90,6 @@ function looprun() {
 }
 
 [[ -z ${force_on} ]] && force_on=${default_builder_hosts}
-for h in ${force_on};do 
+for h in ${force_on};do
     looprun ${h}
 done
