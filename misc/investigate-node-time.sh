@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+defaultdomain=axa.enoshift.com
+default_builder_hosts="node1 node2"
 buildname=simple-test
 quiet=no
 
@@ -16,54 +18,63 @@ SED=sed
 type -p gsed >/dev/null 2>/dev/null && SED=gsed
 
 function run() {
+    local on_host=$1
+
     oc delete builds --all >/dev/null
     B=$(oc start-build ${buildname})
     BP=$(oc get pod|grep build|awk '{print $1}')
     Host=$(oc describe pod $BP|grep Node:|${SED} -r 's/Node:[ \t]*//;s,/.*,,')
 
-    if [[ -n ${force_on} && ${force_on} != ${Host} ]];then
+    if [[ -n ${on_host} && ${on_host}.${defaultdomain} != ${Host} ]];then
         oc cancel-build ${B} >/dev/null
         return 1
     fi
 }
-
-while true;do
-    run
-    if [[ $? != 0 ]];then
+function looprun() {
+    local tohost=$1
+    while true;do
         run
-    else
-        break
+        if [[ $? != 0 ]];then
+            run ${tohost}
+        else
+            break
+        fi
+    done
+
+    if [[ -n ${quiet} ]];then
+        whiteb "Started around: $(date)"
+        cyan "Running on ${Host}"
+
+        echo -n "Waiting that the build ${BP} started: "
     fi
+
+
+    while :;do
+        running=$(oc get pod ${BP}|grep Running)
+        [[ -n ${running} ]] && break
+        sleep 2
+        [[ -n ${quiet} ]] &&  echo -n "."
+    done
+    [[ -n ${quiet} ]] && echo ". success"
+
+    [[ -n ${quiet} ]] && echo "Wait that the build ${BP} has succeded":
+    while true;do
+        OUTPUT=$(oc build-logs ${B} |tail -n1)
+        if echo ${OUTPUT} | grep -q "Successfully pushed";then
+            green "${Host}:Success: ${OUTPUT}"
+            break
+        elif echo ${OUTPUT} | grep -q "Build error";then
+            red "${Host}: Failure ${OUTPUT}"
+            break
+        fi
+        echo "Waiting: ${OUTPUT}"
+        sleep 5
+    done
+
+    [[ -n ${quiet} ]] && whiteb "End at: $(date)"
+}
+
+[[ -z ${force_on} ]] && force_on=${default_builder_hosts}
+for h in ${force_on};do 
+    looprun ${h}
 done
-
-if [[ -n ${quiet} ]];then
-    whiteb "Started around: $(date)"
-    cyan "Running on ${Host}"
-
-    echo -n "Waiting that the build ${BP} started: "
-fi
-
-
-while :;do
-    running=$(oc get pod ${BP}|grep Running)
-   [[ -n ${running} ]] && break
-    sleep 2
-   [[ -n ${quiet} ]] &&  echo -n "."
-done
-[[ -n ${quiet} ]] && echo ". success"
-
-[[ -n ${quiet} ]] && echo "Wait that the build ${BP} has succeded":
-while true;do
-    OUTPUT=$(oc build-logs ${B} |tail -n1)
-    if echo ${OUTPUT} | grep -q "Successfully pushed";then
-        green "${Host}:Success: ${OUTPUT}"
-        break
-    elif echo ${OUTPUT} | grep -q "Build error";then
-        red "${Host}: Failure ${OUTPUT}"
-        break
-    fi
-    echo "Waiting: ${OUTPUT}"
-    sleep 5
-done
-
-[[ -n ${quiet} ]] && whiteb "End at: $(date)"
