@@ -1,18 +1,28 @@
 #!/usr/bin/env bash
 # based on DNS convention using a defaultdomain you can override with switch
+# the domain normally auto detected loosely from oc project output command
+# -b the buildname which is going to be started
+# -q be quiet
+# -l how many loops we wil do if no specific nodes is specified this will be
+# -multiple loop of all default nodes
+# first argument is a specifc node to
 
 default_domain=$(oc project|sed 's/.*on server.*https:\/\///;s/:.*//')
 default_builder_hosts="node1 node2"
 default_buildname=simple-test
+default_loop_times=1
 quiet=no
 
-while getopts ":qd:b:" opt; do
+while getopts ":qd:b:l:" opt; do
   case $opt in
     b)
       buildname=${OPTARG}
       ;;
     d)
       domain=${OPTARG}
+      ;;
+    l)
+      loop_times=${OPTARG}
       ;;
     q)
       quiet=;
@@ -93,6 +103,9 @@ function looprun() {
 }
 
 [[ -z ${force_on} ]] && force_on=${default_builder_hosts}
-for h in ${force_on};do
-    looprun ${h}
+
+for loop_time in $(seq 1 ${loop_times:-$default_loop_times});do
+    for h in ${force_on};do
+        looprun ${h}
+    done
 done
