@@ -9,7 +9,7 @@ force_on=$1 # define a node name here if we need to
 function red() { echo -e "\e[31m$@\e[0m"  ;}
 function green() { echo -e "\e[32m$@\e[0m"  ;}
 function whiteb() { echo -e "\e[1;37m$@\e[0m"  ;}
-function cyan() { echo -e "\e[37m$@\e[0m"  ;}
+function cyan() { echo -e "\e[36m$@\e[0m"  ;}
 
 
 SED=sed
