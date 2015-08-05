@@ -2,6 +2,9 @@
 buildname=simple-test
 force_on=$1 # define a node name here if we need to
 
+function red() { echo -e "\e[31m$@\e[0m"  ;}
+function green() { echo -e "\e[32m$@\e[0m"  ;}
+
 SED=sed
 type -p gsed >/dev/null 2>/dev/null && SED=gsed
 
@@ -43,10 +46,10 @@ echo "Wait that the build ${BP} has succeded":
 while true;do
     OUTPUT=$(oc build-logs ${B} |tail -n1)
     if echo ${OUTPUT} | grep -q "Successfully pushed";then
-        echo "Success: ${OUTPUT}"
+        green "Success: ${OUTPUT}"
         break
     elif echo ${OUTPUT} | grep -q "Build error";then
-        echo "Failure ${OUTPUT}"
+        red "Failure ${OUTPUT}"
         break
     fi
     echo "Waiting: ${OUTPUT}"
