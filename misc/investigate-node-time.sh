@@ -2,11 +2,14 @@
 buildname=simple-test
 force_on=$1 # define a node name here if we need to
 
+SED=sed
+type -p gsed >/dev/null 2>/dev/null && SED=gsed
+
 function run() {
     oc delete builds --all >/dev/null
     B=$(oc start-build ${buildname})
     BP=$(oc get pod|grep build|awk '{print $1}')
-    Host=$(oc describe pod $BP|grep Node:|gsed -r 's/Node:[ \t]*//;s,/.*,,')
+    Host=$(oc describe pod $BP|grep Node:|${SED} -r 's/Node:[ \t]*//;s,/.*,,')
 
     if [[ -n ${force_on} && ${force_on} != ${Host} ]];then
         oc cancel-build ${B} >/dev/null
