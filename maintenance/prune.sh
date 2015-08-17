@@ -64,7 +64,7 @@ case "$1" in
         docker_prune_images
         ;;
     *)
-        echo  "Usage: $0 {openshift|docker|all}"
+        echo  "Usage: $0 {openshift|docker|docker-images|all}"
         exit 1
         ;;
 esac
