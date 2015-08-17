@@ -32,10 +32,19 @@ function openshift_prune {
 }
 
 function docker_prune {
-    echo "$(datenow) cleanup-stopped-pods.py" >> $LOGFILE
+    echo "$(datenow) docker_prune cleanup-stopped-pods.py" >> $LOGFILE
     for i in $(python /opt/rcip-openshift-scripts/maintenance/cleanup-stopped-pods.py);do
         echo "   rm $i" >> $LOGFILE
         /usr/bin/docker rm $i 2>&1 >> $LOGFILE
+    done
+}
+
+
+function docker_prune_images {
+    echo "$(datenow) docker_prune_images" >> $LOGFILE
+    for i in $(/usr/bin/docker images -q);do
+        echo "   rmi $i" >> $LOGFILE
+        /usr/bin/docker rmi $i 2>&1 >> $LOGFILE
     done
 }
 
@@ -46,9 +55,13 @@ case "$1" in
     docker)
         docker_prune
         ;;
+    docker-images)
+        docker_prune_images
+        ;;
     all)
         openshift_prune
 		docker_prune
+        docker_prune_images
         ;;
     *)
         echo  "Usage: $0 {openshift|docker|all}"
