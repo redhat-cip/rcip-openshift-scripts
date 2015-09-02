@@ -56,7 +56,10 @@ PARSER.add_argument("-u", "--username", type=str,
 PARSER.add_argument("-p", "--password", type=str,
                     required=False,
                     help='Password openshift')
-PARSER.add_argument("-t", "--token", type=str,
+PARSER.add_argument("-to", "--token", type=str,
+                    required=False,
+                    help='File with token openshift (like -t)')
+PARSER.add_argument("-tf", "--tokenfile", type=str,
                     required=False,
                     help='Token openshift (use token or user/pass')
 PARSER.add_argument("--check_nodes", action='store_true',
@@ -98,7 +101,7 @@ class Openshift(object):
   os_STATE = 0
   os_OUTPUT_MESSAGE = ''
 
-  def __init__(self, host=None, port=8443, username=username, password=password, token=None, debug=False, verbose=False, proto=None, headers=None):
+  def __init__(self, host=None, port=8443, username=username, password=password, token=None, tokenfile=None, debug=False, verbose=False, proto=None, headers=None):
      if proto is not None:
          self.proto = proto
 
@@ -122,6 +125,8 @@ class Openshift(object):
 
      if token:
          self.token = token
+     elif tokenfile:
+         self.token=self._tokenfile(tokenfile)
      else:
          self.token=self._auth()
 
@@ -133,6 +138,16 @@ class Openshift(object):
      stdout = subprocess.check_output(cmd, shell=True)
 
      return stdout.strip()
+
+  def _tokenfile(self,tokenfile):
+     try:
+       f = open(tokenfile, 'r')
+       return f.readline().strip()
+     except IOError:
+       self.os_OUTPUT_MESSAGE += ' Error: File does not appear to exist'
+       self.os_STATE = 2
+       return "tokenfile-inaccessible"
+       
 
   def get_nodes(self):
 
@@ -264,6 +279,8 @@ if __name__ == "__main__":
 
    if ARGS.token:
       myos = Openshift(host=ARGS.host, port=ARGS.port, token=ARGS.token, proto=ARGS.protocol)
+   elif ARGS.tokenfile:
+      myos = Openshift(host=ARGS.host, port=ARGS.port, tokenfile=ARGS.tokenfile, proto=ARGS.protocol)
    elif ARGS.username and ARGS.password:
       myos = Openshift(host=ARGS.host, port=ARGS.port, username=ARGS.username, password=ARGS.password, proto=ARGS.protocol)
    else:

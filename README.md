@@ -17,9 +17,10 @@ Script help
 ```bash
 python check_openshift.py -h
 usage: check_openshift.py [-h] [-proto PROTOCOL] [-H HOST] [-P PORT]
-                          [-u USERNAME] [-p PASSWORD] [-t TOKEN]
-                          [--check_nodes] [--check_pods] [--check_regions]
-                          [--region_offline REGION_OFFLINE]
+                          [-u USERNAME] [-p PASSWORD] [-to TOKEN]
+                          [-tf TOKENFILE] [--check_nodes] [--check_pods]
+                          [--check_regions] [--region_offline REGION_OFFLINE]
+                          [-v]
 
 Openshift check pods
 
@@ -33,7 +34,9 @@ optional arguments:
                         Username openshift (ex : sensu)
   -p PASSWORD, --password PASSWORD
                         Password openshift
-  -t TOKEN, --token TOKEN
+  -to TOKEN, --token TOKEN
+                        File with token openshift (like -t)
+  -tf TOKENFILE, --tokenfile TOKENFILE
                         Token openshift (use token or user/pass
   --check_nodes         Check status of all nodes
   --check_pods          Check status of pods ose-haproxy-router and ose-
