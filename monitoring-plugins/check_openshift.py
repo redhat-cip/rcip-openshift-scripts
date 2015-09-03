@@ -70,7 +70,7 @@ PARSER.add_argument("--check_pods", action='store_true',
                     help='Check status of pods ose-haproxy-router and ose-docker-registry')
 PARSER.add_argument("--check_labels", action='store_true',
                     required=False,
-                    help='Check if your nodes are in your "OFFLINE" region. Only warning (define by --label_offline)')
+                    help='Check if your nodes have your "OFFLINE" label. Only warning (define by --label_offline)')
 PARSER.add_argument("--label_offline", type=str,
                     required=False,
                     help='Your "OFFLINE" label name (Default: retiring)',
@@ -207,12 +207,14 @@ class Openshift(object):
 
        try:
          if item["status"]["Condition"][0]["status"] != "True":
-            pods[item["metadata"]["labels"]["deploymentconfig"]] = item["metadata"]["name"] + ': [' + item["status"]["phase"] + ' ' + item["status"]["Condition"][0]["status"] + '] '
-            self.os_STATE = 2
+            if 'deploymentconfig' in item["metadata"]["labels"].keys():
+              pods[item["metadata"]["labels"]["deploymentconfig"]] = item["metadata"]["name"] + ': [' + item["status"]["phase"] + ' ' + item["status"]["Condition"][0]["status"] + '] '
+              self.os_STATE = 2
          else:
-            pods[item["metadata"]["labels"]["deploymentconfig"]] = item["metadata"]["name"] + ': [' + item["status"]["phase"] + '] '
+            if 'deploymentconfig' in item["metadata"]["labels"].keys():
+              pods[item["metadata"]["labels"]["deploymentconfig"]] = item["metadata"]["name"] + ': [' + item["status"]["phase"] + '] '
 
-       except ValueError:
+       except:
          pass
 
 
