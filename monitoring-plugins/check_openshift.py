@@ -70,11 +70,11 @@ PARSER.add_argument("--check_pods", action='store_true',
                     help='Check status of pods ose-haproxy-router and ose-docker-registry')
 PARSER.add_argument("--check_regions", action='store_true',
                     required=False,
-                    help='Check if your nodes are in your "OFFLINE" region. Only warning (define by --region_offline)')
-PARSER.add_argument("--region_offline", type=str,
+                    help='Check if your nodes are in your "OFFLINE" region. Only warning (define by --label_offline)')
+PARSER.add_argument("--label_offline", type=str,
                     required=False,
-                    help='Your "OFFLINE" region name (Default: OFFLINE)',
-                    default="OFFLINE")
+                    help='Your "OFFLINE" label name (Default: retiring)',
+                    default="retiring")
 PARSER.add_argument("-v", "--version", action='store_true',
                     required=False,
                     help='Print script version')
@@ -238,7 +238,7 @@ class Openshift(object):
      #   self.os_OUTPUT_MESSAGE = 'docker-registry and router [Running]'
 
 
-  def get_regions(self,region_offline):
+  def get_labels(self,label_offline):
 
      self.os_OUTPUT_MESSAGE += ' Nodes: '
 
@@ -261,9 +261,9 @@ class Openshift(object):
        #print item["status"]["conditions"][0]["status"]
        #print item["status"]["conditions"][0]["reason"]
        #if status not ready
-       if item["metadata"]["labels"]["region"] == region_offline:
+       if label_offline in item["metadata"]["labels"].keys():
           self.os_STATE = 1 #just warning
-          self.os_OUTPUT_MESSAGE += item["metadata"]["name"] + '/' + item["status"]["addresses"][0]["address"] + ': [Region: '+ region_offline + '] '
+          self.os_OUTPUT_MESSAGE += item["metadata"]["name"] + '/' + item["status"]["addresses"][0]["address"] + ': [Label: '+ label_offline + '] '
      
      if self.os_STATE == 0:
         self.os_OUTPUT_MESSAGE += all_nodes_names + '[schedulable]'
@@ -294,7 +294,7 @@ if __name__ == "__main__":
       myos.get_pods()
 
    if ARGS.check_regions:
-      myos.get_regions(ARGS.region_offline)
+      myos.get_labels(ARGS.label_offline)
 
    try:
      STATE = myos.os_STATE
