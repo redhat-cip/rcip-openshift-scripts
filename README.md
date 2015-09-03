@@ -15,11 +15,10 @@ If you didn't have token, use user/pass to perform an "oc login" and get a token
 Script help
 
 ```bash
-python check_openshift.py -h
 usage: check_openshift.py [-h] [-proto PROTOCOL] [-H HOST] [-P PORT]
                           [-u USERNAME] [-p PASSWORD] [-to TOKEN]
                           [-tf TOKENFILE] [--check_nodes] [--check_pods]
-                          [--check_regions] [--region_offline REGION_OFFLINE]
+                          [--check_regions] [--label_offline LABEL_OFFLINE]
                           [-v]
 
 Openshift check pods
@@ -42,9 +41,9 @@ optional arguments:
   --check_pods          Check status of pods ose-haproxy-router and ose-
                         docker-registry
   --check_regions       Check if your nodes are in your "OFFLINE" region. Only
-                        warning (define by --region_offline)
-  --region_offline REGION_OFFLINE
-                        Your "OFFLINE" region name (Default: OFFLINE)
+                        warning (define by --label_offline)
+  --label_offline LABEL_OFFLINE
+                        Your "OFFLINE" label name (Default: retiring)
   -v, --version         Print script version
 ```
 
@@ -66,4 +65,27 @@ oc describe serviceaccount metrics
 oc describe secret metrics-token-bsd4v
 
 oadm policy add-cluster-role-to-user cluster-reader system:serviceaccount:default:metrics
+```
+
+```bash                                                                                                                                                                                               
+{
+  "predicates": [
+    {"name": "MatchNodeSelector"},
+    {"name": "PodFitsResources"},
+    {"name": "PodFitsPorts"},
+    {"name": "NoDiskConflict"},
+    {"name": "Region", "argument": {"serviceAffinity" : {"labels" : ["region"]}}},
+    {"name" : "RequireRegion", "argument" : {"labelsPresence" : {"labels" : ["retiring"], "presence" : false}}}
+  ],"priorities": [
+    {"name": "LeastRequestedPriority", "weight": 1}, 
+    {"name" : "BalancedResourceAllocation", "weight" : 1},
+    {"name": "ServiceSpreadingPriority", "weight": 1}
+  ]
+}
+```
+
+And when you need, add the retiring label
+
+```bash
+oc edit node mynode
 ```
