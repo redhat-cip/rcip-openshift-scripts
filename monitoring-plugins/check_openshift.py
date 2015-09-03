@@ -68,7 +68,7 @@ PARSER.add_argument("--check_nodes", action='store_true',
 PARSER.add_argument("--check_pods", action='store_true',
                     required=False,
                     help='Check status of pods ose-haproxy-router and ose-docker-registry')
-PARSER.add_argument("--check_regions", action='store_true',
+PARSER.add_argument("--check_labels", action='store_true',
                     required=False,
                     help='Check if your nodes are in your "OFFLINE" region. Only warning (define by --label_offline)')
 PARSER.add_argument("--label_offline", type=str,
@@ -293,7 +293,7 @@ if __name__ == "__main__":
    if ARGS.check_pods:
       myos.get_pods()
 
-   if ARGS.check_regions:
+   if ARGS.check_labels:
       myos.get_labels(ARGS.label_offline)
 
    try:
