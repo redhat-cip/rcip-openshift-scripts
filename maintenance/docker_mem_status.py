@@ -15,7 +15,7 @@
 import docker
 import json
 
-client = docker.Client(base_url='unix://var/run/docker.sock', timeout=10)
+client = docker.Client(base_url='unix://var/run/docker.sock', timeout=30)
 containers = client.containers(all=True, filters={'status': 'running'})
 
 pods = {}
