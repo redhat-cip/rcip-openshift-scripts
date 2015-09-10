@@ -1,14 +1,16 @@
 #!/bin/sh
 set -e
 
+BACKUPDIR='/opt/backup/etcd'
+
 ORIG=$(cd $(dirname $0); pwd)
 
 eval $(${ORIG}/get_env.py)
 
 
-mkdir -p "${ORIG}/cold_backup"
-backupdir="${ORIG}/cold_backup/$(date +%Y%m%d%H%M).etcd"
+mkdir -p "${BACKUPDIR}/cold_backup"
+colddir="${BACKUPDIR}/cold_backup/$(date +%Y%m%d%H%M).etcd"
 
 systemctl stop openshift-master
-cp -r $etcd_storage $backupdir
+cp -r $etcd_storage $colddir
 systemctl start openshift-master

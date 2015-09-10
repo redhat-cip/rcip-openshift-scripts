@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+BACKUPDIR='/opt/backup/etcd'
+
 ORIG=$(cd $(dirname $0); pwd)
 
 eval $(${ORIG}/get_env.py)
@@ -8,10 +10,11 @@ ETCD="etcdctl --cert-file ${etcd_certFile} --key-file ${etcd_keyFile} --ca-file 
 
 $ETCD ls --recursive
 
-backupdir="${ORIG}/$(date +%Y%m%d%H%M).etcd"
-mkdir -p $backupdir
-echo "backuping the data directory to $backupdir"
-$ETCD backup --data-dir $etcd_storage --backup-dir $backupdir
+hotdir="${BACKUPDIR}/hot/$(date +%Y%m%d%H%M).etcd"
+mkdir -p $hotdir
+
+echo "backuping the data directory to $hotdir"
+$ETCD backup --data-dir $etcd_storage --backup-dir $hotdir
 echo
-du -ksh $backupdir
-find $backupdir
+du -ksh $hotdir
+find $hotdir
