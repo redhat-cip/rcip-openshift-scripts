@@ -4,7 +4,7 @@ set -e
 BACKUPDIR='/opt/backup/etcd'
 
 # minimum number of backup to keep
-KEEP=20
+KEEP=10
 
 for d in hot cold_backup; do
     ls -d $BACKUPDIR/$d/*.etcd | head -n "-${KEEP}" | while read i; do
