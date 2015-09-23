@@ -1,6 +1,11 @@
 #!/bin/sh
 
-timeout 5 /etc/sensu/plugins/check_docker $@
+#$1 check_docker path (ex: /etc/sensu/plugins/check_docker)
+#$@ all check_docker params
+CHECK_DOCKER=$1
+shift
+
+timeout 5 $CHECK_DOCKER $@
 R=$?
 if [ "$R" = '124' ]; then
   echo "CRITICAL docker timeout"
