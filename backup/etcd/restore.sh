@@ -17,4 +17,10 @@ fi
 systemctl stop openshift-master
 mv "${etcd_storage}" "${etcd_storage}.$(date +%Y%m%d%H%M).bak"
 cp -r $backupdir $etcd_storage
+etcd_log=$(mktemp)
+tail -f $etcd_log | if grep -q 'etcdserver: published'; then pkill etcd ; fi&
+set +e
+etcd --data-dir=$etcd_storage --force-new-cluster |& tee -a $etcd_log
+set -e
+rm $etcd_log
 systemctl start openshift-master
