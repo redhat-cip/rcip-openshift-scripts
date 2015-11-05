@@ -17,6 +17,9 @@ fi
 systemctl stop openshift-master
 if [ "$etcd_outside_openshift" = "yes" ]; then
 	systemctl stop etcd
+  echo "please make sure you have stopped old etcd instances and removed their old data directories specified by the data-dir configuration parameter."
+  echo -n "[press to continue]"
+  read
 fi
 etcdpermission=$(stat -c '%U:%G' ${etcd_storage})
 mv "${etcd_storage}" "${etcd_storage}.$(date +%Y%m%d%H%M).bak"
@@ -32,3 +35,5 @@ if [ "$etcd_outside_openshift" = "yes" ]; then
 	systemctl start etcd
 fi
 systemctl start openshift-master
+echo "Add other nodes to the cluster with 'etcdctl member add' command and start the services"
+echo "see https://github.com/coreos/etcd/blob/master/Documentation/runtime-configuration.md#add-a-new-member"
