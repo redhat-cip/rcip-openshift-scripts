@@ -16,6 +16,6 @@ with open(basedir + 'master-config.yaml', 'r') as stream:
     except:
         for line in open('/etc/etcd/etcd.conf', 'r'):
             if re.search('ETCD_DATA_DIR', line):
-                stor = line.replace('ETCD_DATA_DIR=', '').rstrip().rstrip('/')
+                stor = line.replace('ETCD_DATA_DIR=', '').rstrip('\n/')
                 break
     print('export etcd_storage=%s' % stor)
