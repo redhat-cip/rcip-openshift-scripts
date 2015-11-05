@@ -18,8 +18,8 @@ systemctl stop openshift-master
 if [ "$etcd_outside_openshift" = "yes" ]; then
 	systemctl stop etcd
 fi
-mv "${etcd_storage}" "${etcd_storage}.$(date +%Y%m%d%H%M).bak"
 etcdpermission=$(stat -c '%U:%G' ${etcd_storage})
+mv "${etcd_storage}" "${etcd_storage}.$(date +%Y%m%d%H%M).bak"
 cp -r $backupdir $etcd_storage
 chown -R $etcdpermission ${etcd_storage}
 etcd_log=$(mktemp)
