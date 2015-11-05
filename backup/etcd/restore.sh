@@ -19,7 +19,9 @@ if [ "$etcd_outside_openshift" = "yes" ]; then
 	systemctl stop etcd
 fi
 mv "${etcd_storage}" "${etcd_storage}.$(date +%Y%m%d%H%M).bak"
+etcdpermission=$(stat -c '%U:%G' ${etcd_storage})
 cp -r $backupdir $etcd_storage
+chown -R $etcdpermission ${etcd_storage}
 etcd_log=$(mktemp)
 tail -f $etcd_log | if grep -q 'etcdserver: published'; then pkill etcd ; fi&
 set +e
