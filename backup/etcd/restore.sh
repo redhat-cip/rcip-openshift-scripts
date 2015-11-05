@@ -15,6 +15,9 @@ if [ -z "$backupdir" ] || [ ! -d "$backupdir" ] || [[ ! $backupdir =~ .etcd ]]; 
 fi
 
 systemctl stop openshift-master
+if [ "$etcd_outside_openshift" = "yes" ]; then
+	systemctl stop etcd
+fi
 mv "${etcd_storage}" "${etcd_storage}.$(date +%Y%m%d%H%M).bak"
 cp -r $backupdir $etcd_storage
 etcd_log=$(mktemp)
@@ -23,4 +26,7 @@ set +e
 etcd --data-dir=$etcd_storage --force-new-cluster |& tee -a $etcd_log
 set -e
 rm $etcd_log
+if [ "$etcd_outside_openshift" = "yes" ]; then
+	systemctl start etcd
+fi
 systemctl start openshift-master
