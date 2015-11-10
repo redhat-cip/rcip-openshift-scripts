@@ -7,6 +7,9 @@ ORIG=$(cd $(dirname $0); pwd)
 
 eval $(${ORIG}/get_env.py)
 
+# try to contact etcd before doing anything
+ETCDCTL="etcdctl --cert-file ${etcd_certFile} --key-file ${etcd_keyFile} --ca-file ${etcd_ca} --no-sync --peers ${etcd_url}"
+$ETCDCTL ls
 
 mkdir -p "${BACKUPDIR}/cold_backup"
 colddir="${BACKUPDIR}/cold_backup/$(date +%Y%m%d%H%M).etcd"
