@@ -1,8 +1,9 @@
 # rcip-openshift-scripts
 
+## monitoring-plugins
+Check compatible with Sensu, nagios ...
 
-
-##monitoring-plugins/check_openshift.py
+##openshift/check_openshift.py
 
 Use token to request openshift api (/api/v1beta3/)  with Oauth.
 If you didn't have token, use user/pass to perform an "oc login" and get a token.
@@ -11,15 +12,16 @@ If you didn't have token, use user/pass to perform an "oc login" and get a token
   * check_nodes : Request status of nodes through openshift API
   * check_pods : Request status of pods (with deployconfig : docker-registry and router)
   * check_regions : Request regions affected on nodes and return warning if it's  match to your "OFFLINE" region
+  * check_scheduling : Find if your nodes have the unschedulable flag (SchedulingDisabledà.
 
 Script help
 
 ```bash
-usage: check_openshift.py [-h] [-proto PROTOCOL] [-H HOST] [-P PORT]
-                          [-u USERNAME] [-p PASSWORD] [-to TOKEN]
+usage: check_openshift.py [-h] [-proto PROTOCOL] [-api BASE_API] [-H HOST]
+                          [-P PORT] [-u USERNAME] [-p PASSWORD] [-to TOKEN]
                           [-tf TOKENFILE] [--check_nodes] [--check_pods]
-                          [--check_regions] [--label_offline LABEL_OFFLINE]
-                          [-v]
+                          [--check_scheduling] [--check_labels]
+                          [--label_offline LABEL_OFFLINE] [-v]
 
 Openshift check pods
 
@@ -27,6 +29,8 @@ optional arguments:
   -h, --help            show this help message and exit
   -proto PROTOCOL, --protocol PROTOCOL
                         Protocol openshift (Default : https)
+  -api BASE_API, --base_api BASE_API
+                        Url api and version (Default : /api/v1/)
   -H HOST, --host HOST  Host openshift (Default : 127.0.0.1)
   -P PORT, --port PORT  Port openshift (Default : 8443)
   -u USERNAME, --username USERNAME
@@ -40,7 +44,9 @@ optional arguments:
   --check_nodes         Check status of all nodes
   --check_pods          Check status of pods ose-haproxy-router and ose-
                         docker-registry
-  --check_regions       Check if your nodes are in your "OFFLINE" region. Only
+  --check_scheduling    Check if your nodes is in SchedulingDisabled stat.
+                        Only warning
+  --check_labels        Check if your nodes have your "OFFLINE" label. Only
                         warning (define by --label_offline)
   --label_offline LABEL_OFFLINE
                         Your "OFFLINE" label name (Default: retiring)
@@ -48,7 +54,6 @@ optional arguments:
 ```
 
 We suggest to use a permanant token from a ServiceAccount. Exemple on how create one
-
 
 ```bash
 echo '{
@@ -67,7 +72,9 @@ oc describe secret metrics-token-bsd4v
 oadm policy add-cluster-role-to-user cluster-reader system:serviceaccount:default:metrics
 ```
 
-```bash                                                                                                                                                                                               
+For retiring label we suggest to use this predicates line
+
+```bash
 {
   "predicates": [
     {"name": "MatchNodeSelector"},
@@ -77,7 +84,7 @@ oadm policy add-cluster-role-to-user cluster-reader system:serviceaccount:defaul
     {"name": "Region", "argument": {"serviceAffinity" : {"labels" : ["region"]}}},
     {"name" : "RequireRegion", "argument" : {"labelsPresence" : {"labels" : ["retiring"], "presence" : false}}}
   ],"priorities": [
-    {"name": "LeastRequestedPriority", "weight": 1}, 
+    {"name": "LeastRequestedPriority", "weight": 1},
     {"name" : "BalancedResourceAllocation", "weight" : 1},
     {"name": "ServiceSpreadingPriority", "weight": 1}
   ]

@@ -25,7 +25,7 @@ import subprocess
 import httplib
 import json
 
-VERSION = '1.0'
+VERSION = '1.1'
 
 STATE_OK = 0
 STATE_WARNING = 1
@@ -72,6 +72,9 @@ PARSER.add_argument("--check_nodes", action='store_true',
 PARSER.add_argument("--check_pods", action='store_true',
                     required=False,
                     help='Check status of pods ose-haproxy-router and ose-docker-registry')
+PARSER.add_argument("--check_scheduling", action='store_true',
+                    required=False,
+                    help='Check if your nodes is in SchedulingDisabled stat. Only warning')
 PARSER.add_argument("--check_labels", action='store_true',
                     required=False,
                     help='Check if your nodes have your "OFFLINE" label. Only warning (define by --label_offline)')
@@ -140,6 +143,44 @@ class Openshift(object):
        self.os_STATE = 2
        return "tokenfile-inaccessible"
        
+  def get_scheduling(self):
+
+     self.os_OUTPUT_MESSAGE += ' Nodes: '
+
+     api_nodes = self.base_api + 'nodes'
+     headers = {"Authorization": 'Bearer ' + self.token}
+     conn = httplib.HTTPSConnection(self.host, self.port)
+     conn.request("GET", api_nodes, "", headers)
+     r1 = conn.getresponse()
+     rjson = r1.read()
+     conn.close()
+     try:
+       parsed_json = json.loads(rjson)
+     except ValueError:
+       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , rjson)
+       sys.exit(STATE_UNKNOWN)
+       
+
+     all_nodes_names=''
+     for item in parsed_json["items"]:
+       all_nodes_names+=item["metadata"]["name"] + ' '
+
+       #print item["metadata"]["name"]
+       #print item["status"]["addresses"][0]["address"]
+       #print item["status"]["conditions"][0]["type"]
+       #print item["status"]["conditions"][0]["status"]
+       #print item["status"]["conditions"][0]["reason"]
+
+       try:
+         if item["spec"]["unschedulable"]:
+           self.os_STATE = 1
+           schedule_flag = True
+           self.os_OUTPUT_MESSAGE += "%s/%s: [SchedulingDisabled] " % (item["metadata"]["name"], item["status"]["addresses"][0]["address"])
+       except:
+         schedule_flag = False
+
+     if self.os_STATE == 0:
+        self.os_OUTPUT_MESSAGE += "%s [Schedulable]" % (all_nodes_names)
 
   def get_nodes(self):
 
@@ -210,7 +251,6 @@ class Openshift(object):
        #print item["status"]["phase"]
        #print item["status"][status_condition][0]["type"]
        #print item["status"][status_condition][0]["status"]
-
        try:
          if item["status"][status_condition][0]["status"] != "True":
             if 'deploymentconfig' in item["metadata"]["labels"].keys():
@@ -295,6 +335,9 @@ if __name__ == "__main__":
 
    if ARGS.check_labels:
       myos.get_labels(ARGS.label_offline)
+
+   if ARGS.check_scheduling:
+      myos.get_scheduling()
 
    try:
      STATE = myos.os_STATE
