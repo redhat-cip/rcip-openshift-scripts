@@ -42,6 +42,10 @@ PARSER.add_argument("-proto", "--protocol", type=str,
                     required=False,
                     help='Protocol openshift (Default : https)',
                     default="https")
+PARSER.add_argument("-api", "--base_api", type=str,
+                    required=False,
+                    help='Url api and version (Default : /api/v1/)',
+                    default="/api/v1/")
 PARSER.add_argument("-H", "--host", type=str,
                     required=False,
                     help='Host openshift (Default : 127.0.0.1)',
@@ -85,43 +89,31 @@ class Openshift(object):
   A little object for use REST openshift v3 api
   """
 
-  proto = 'https'
-  host = '127.0.0.1'
-  port = 8443
-  username = None
-  password = None
-  token = None
-  headers = None
-  response = None
-  base_uri = None
-  base_api = '/api/v1beta3/'
-  verbose = False
-  debug = False
-  namespace = "default"
-  os_STATE = 0
-  os_OUTPUT_MESSAGE = ''
+  def __init__(self,
+               proto='https',
+               host='127.0.0.1',
+               port=8443,
+               username=None,
+               password=None,
+               token=None,
+               tokenfile=None,
+               debug=False,
+               verbose=False,
+               namespace='default',
+               base_api='/api/v1/'):
 
-  def __init__(self, host=None, port=8443, username=username, password=password, token=None, tokenfile=None, debug=False, verbose=False, proto=None, headers=None):
-     if proto is not None:
-         self.proto = proto
+     self.os_STATE = 0
+     self.os_OUTPUT_MESSAGE = ''
 
-     if host is not None:
-         self.host = host
-
-     if username:
-         self.username = username
-
-     if password:
-         self.password = password
-
-     if headers:
-         self.headers = headers
-
-     if verbose:
-         self.verbose = verbose
-
-     self.debug = debug
-     self.base_uri = self.proto + "://" + host +  self.base_api
+     self.proto     = proto
+     self.host      = host
+     self.port      = port
+     self.username  = username
+     self.password  = password
+     self.debug     = debug
+     self.verbose   = verbose
+     self.namespace = namespace
+     self.base_api  = base_api
 
      if token:
          self.token = token
@@ -206,24 +198,29 @@ class Openshift(object):
        sys.exit(STATE_UNKNOWN)
 
      pods = {}
+
+     if self.base_api == '/api/v1beta3/':
+        status_condition = 'Condition'
+     else:
+        status_condition = 'conditions'
+     
      for item in parsed_json["items"]:
        #print item["metadata"]["name"]
        #print item["metadata"]["labels"]["deploymentconfig"]
        #print item["status"]["phase"]
-       #print item["status"]["Condition"][0]["type"]
-       #print item["status"]["Condition"][0]["status"]
+       #print item["status"][status_condition][0]["type"]
+       #print item["status"][status_condition][0]["status"]
 
        try:
-         if item["status"]["Condition"][0]["status"] != "True":
+         if item["status"][status_condition][0]["status"] != "True":
             if 'deploymentconfig' in item["metadata"]["labels"].keys():
-              pods[item["metadata"]["labels"]["deploymentconfig"]] = "%s: [%s] " % (item["metadata"]["name"], item["status"]["phase"], item["status"]["Condition"][0]["status"] )
+              pods[item["metadata"]["labels"]["deploymentconfig"]] = "%s: [%s] " % (item["metadata"]["name"], item["status"]["phase"], item["status"][status_condition][0]["status"] )
               self.os_STATE = 2
          else:
             if 'deploymentconfig' in item["metadata"]["labels"].keys():
               pods[item["metadata"]["labels"]["deploymentconfig"]] = "%s: [%s] " % (item["metadata"]["name"], item["status"]["phase"])
        except:
          pass
-
 
      registry_dc_name = 'docker-registry'
      router_dc_name = 'router'
@@ -281,11 +278,11 @@ if __name__ == "__main__":
       sys.exit(0)
 
    if ARGS.token:
-      myos = Openshift(host=ARGS.host, port=ARGS.port, token=ARGS.token, proto=ARGS.protocol)
+      myos = Openshift(host=ARGS.host, port=ARGS.port, token=ARGS.token, proto=ARGS.protocol, base_api=ARGS.base_api)
    elif ARGS.tokenfile:
-      myos = Openshift(host=ARGS.host, port=ARGS.port, tokenfile=ARGS.tokenfile, proto=ARGS.protocol)
+      myos = Openshift(host=ARGS.host, port=ARGS.port, tokenfile=ARGS.tokenfile, proto=ARGS.protocol, base_api=ARGS.base_api)
    elif ARGS.username and ARGS.password:
-      myos = Openshift(host=ARGS.host, port=ARGS.port, username=ARGS.username, password=ARGS.password, proto=ARGS.protocol)
+      myos = Openshift(host=ARGS.host, port=ARGS.port, username=ARGS.username, password=ARGS.password, proto=ARGS.protocol, base_api=ARGS.base_api)
    else:
       PARSER.print_help()
       sys.exit(STATE_UNKNOWN)
