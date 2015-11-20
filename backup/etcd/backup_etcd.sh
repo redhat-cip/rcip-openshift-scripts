@@ -1,11 +1,13 @@
 #!/bin/sh
 set -e
 
-BACKUPDIR='/opt/backup/etcd'
-
 ORIG=$(cd $(dirname $0); pwd)
 
-eval $(${ORIG}/get_env.py)
+# env variables you may want to change
+BACKUPDIR=${BACKUPDIR:-"/opt/backup/etcd"}
+MASTER_CONF=${MASTER_CONF:-"/etc/openshift/master"}
+
+eval $(${ORIG}/get_env.py "${MASTER_CONF}")
 ETCD="etcdctl --cert-file ${etcd_certFile} --key-file ${etcd_keyFile} --ca-file ${etcd_ca} --no-sync --peers ${etcd_url}"
 
 $ETCD ls --recursive

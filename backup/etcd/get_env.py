@@ -2,14 +2,20 @@
 
 import yaml
 import re
-basedir='/etc/openshift/master/'
+import sys
+import os
 
-with open(basedir + 'master-config.yaml', 'r') as stream:
+if len(sys.argv) == 2:
+    basedir = sys.argv[1]
+else:
+    basedir = '/etc/openshift/master'
+
+with open(os.path.join(basedir, 'master-config.yaml'), 'r') as stream:
     conf = yaml.load(stream)
     clientconf = conf['etcdClientInfo']
-    print('export etcd_ca=' + basedir + clientconf['ca'])
-    print('export etcd_certFile=' + basedir + clientconf['certFile'])
-    print('export etcd_keyFile=' + basedir + clientconf['keyFile'])
+    print('export etcd_ca=' + os.path.join(basedir, clientconf['ca']))
+    print('export etcd_certFile=' + os.path.join(basedir, clientconf['certFile']))
+    print('export etcd_keyFile=' + os.path.join(basedir, clientconf['keyFile']))
     print('export etcd_url=' + clientconf['urls'][0])
     try:
         stor = conf['etcdConfig']['storageDirectory']

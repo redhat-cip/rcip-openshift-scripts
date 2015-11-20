@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-BACKUPDIR='/opt/backup/etcd'
+BACKUPDIR=${BACKUPDIR:-"/opt/backup/etcd"}
 
 # minimum number of backup to keep
 KEEP=10

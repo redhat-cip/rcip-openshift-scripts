@@ -3,7 +3,11 @@ set -e
 
 ORIG=$(cd $(dirname $0); pwd)
 
-eval $(${ORIG}/get_env.py)
+# env variables you may want to change
+DAEMON_NAME=${DAEMON_NAME:-"openshift-master"}
+MASTER_CONF=${MASTER_CONF:-"/etc/openshift/master"}
+
+eval $(${ORIG}/get_env.py "${MASTER_CONF}")
 
 backupdir=$1
 
@@ -14,9 +18,9 @@ if [ -z "$backupdir" ] || [ ! -d "$backupdir" ] || [[ ! $backupdir =~ .etcd ]]; 
   exit 2
 fi
 
-systemctl stop openshift-master
+systemctl stop ${DAEMON_NAME}
 if [ "$etcd_outside_openshift" = "yes" ]; then
-	systemctl stop etcd
+  systemctl stop etcd
   echo "please make sure you have stopped old etcd instances and removed their old data directories specified by the data-dir configuration parameter."
   echo -n "[press to continue]"
   read
@@ -32,8 +36,8 @@ etcd --data-dir=$etcd_storage --force-new-cluster |& tee -a $etcd_log
 set -e
 rm $etcd_log
 if [ "$etcd_outside_openshift" = "yes" ]; then
-	systemctl start etcd
+  systemctl start etcd
 fi
-systemctl start openshift-master
+systemctl start ${DAEMON_NAME}
 echo "Add other nodes to the cluster with 'etcdctl member add' command and start the services"
 echo "see https://github.com/coreos/etcd/blob/master/Documentation/runtime-configuration.md#add-a-new-member"
