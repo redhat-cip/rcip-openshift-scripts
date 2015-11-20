@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ========================================================================================
-# ARP incomplet check for Nagios/Sensu
+# ARP incomplete check for Nagios/Sensu
 # 
 # =========================================================================================
 
@@ -30,7 +30,7 @@ print_usage() {
 	echo ""
 	echo "-h Show this page"
 	echo "-v Script version"
-	echo "-i --incomplet check if we have incomplet ARP"
+	echo "-i --incomplete check if we have incomplete ARP"
 }
 
 print_help() {
@@ -41,14 +41,14 @@ print_help() {
 	exit 0
 }
 
-check_incomplet() {
-  #check the number of incomplet ARP
-  ARP_INCOMPLET=`arp -a | grep incomplet | wc -l`
-  if [ "$ARP_INCOMPLET" -gt "0" ]; then
-    echo "ARP CRITICAL : ${ARP_INCOMPLET} incomplet"
+check_incomplete() {
+  #check the number of incomplete ARP
+  ARP_INCOMPLETE=`arp -a | grep incomplete | wc -l`
+  if [ "$ARP_INCOMPLETE" -gt "0" ]; then
+    echo "ARP CRITICAL : ${ARP_INCOMPLETE} incomplete"
     exit $STATE_CRITICAL
   else 
-  	echo "ARP OK : 0 incomplet"
+  	echo "ARP OK : 0 incomplete"
   	exit $STATE_OK
   fi
 }
@@ -66,8 +66,8 @@ while [ $# -gt 0 ]; do
                 print_version
                 exit $STATE_OK
                 ;;
-		-i | --incomplet)
-		check_incomplet
+		-i | --incomplete)
+		check_incomplete
 		;;
 		*)  echo "Unknown argument: $1"
             	print_usage
