@@ -128,7 +128,7 @@ class Openshift(object):
        self.os_OUTPUT_MESSAGE += ' Error: File does not appear to exist'
        self.os_STATE = 2
        return "tokenfile-inaccessible"
-       
+
   def get_scheduling(self):
 
      self.os_OUTPUT_MESSAGE += ' Nodes: '
@@ -145,7 +145,12 @@ class Openshift(object):
      except ValueError:
        print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , rjson)
        sys.exit(STATE_UNKNOWN)
-       
+
+     # Return unknow if we can't find datas
+     if not 'items' in parsed_json:
+         self.os_STATE = STATE_UNKNOWN
+         self.os_OUTPUT_MESSAGE = ' Unable to find nodes data in the response.'
+         return
 
      all_nodes_names=''
      for item in parsed_json["items"]:
@@ -185,7 +190,12 @@ class Openshift(object):
      except ValueError:
        print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , rjson)
        sys.exit(STATE_UNKNOWN)
-       
+
+     # Return unknow if we can't find datas
+     if not 'items' in parsed_json:
+         self.os_STATE = STATE_UNKNOWN
+         self.os_OUTPUT_MESSAGE = ' Unable to find nodes data in the response.'
+         return
 
      all_nodes_names=''
      for item in parsed_json["items"]:
@@ -204,10 +214,10 @@ class Openshift(object):
                                                          item["status"]["addresses"][0]["address"],
                                                          item["status"]["conditions"][0]["status"],
                                                          item["status"]["conditions"][0]["reason"])
-     
+
      if self.os_STATE == 0:
         self.os_OUTPUT_MESSAGE += "%s [Ready]" % (all_nodes_names)
-     
+
   def get_pods(self,namespace=None):
 
      self.os_OUTPUT_MESSAGE += ' Pods: '
@@ -234,7 +244,13 @@ class Openshift(object):
         status_condition = 'Condition'
      else:
         status_condition = 'conditions'
-     
+
+     # Return unknow if we can't find datas
+     if not 'items' in parsed_json:
+         self.os_STATE = STATE_UNKNOWN
+         self.os_OUTPUT_MESSAGE = ' Unable to find nodes data in the response.'
+         return
+
      for item in parsed_json["items"]:
        #print item["metadata"]["name"]
        #print item["metadata"]["labels"]["deploymentconfig"]
@@ -284,6 +300,12 @@ class Openshift(object):
      conn.close()
      parsed_json = json.loads(rjson)
 
+     # Return unknow if we can't find datas
+     if not 'items' in parsed_json:
+         self.os_STATE = STATE_UNKNOWN
+         self.os_OUTPUT_MESSAGE = ' Unable to find nodes data in the response.'
+         return
+
      all_nodes_names=''
      for item in parsed_json["items"]:
        all_nodes_names += '%s ' % item["metadata"]["name"]
@@ -299,7 +321,7 @@ class Openshift(object):
           self.os_OUTPUT_MESSAGE += "%s/%s: [Label: %s] " % (item["metadata"]["name"],
                                                              item["status"]["addresses"][0]["address"],
                                                              label_offline)
-     
+
      if self.os_STATE == 0:
         self.os_OUTPUT_MESSAGE += '%s[schedulable]' % all_nodes_names
 
