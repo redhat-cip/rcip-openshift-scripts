@@ -22,8 +22,11 @@
 import sys
 import argparse
 import subprocess
-import httplib
-import json
+import requests
+
+# Disable warning for insecure https
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 VERSION = '1.1'
 
@@ -135,15 +138,13 @@ class Openshift(object):
 
      api_nodes = self.base_api + 'nodes'
      headers = {"Authorization": 'Bearer %s' % self.token}
-     conn = httplib.HTTPSConnection(self.host, self.port)
-     conn.request("GET", api_nodes, "", headers)
-     r1 = conn.getresponse()
-     rjson = r1.read()
-     conn.close()
+     r = requests.get('https://%s:%s%s' % (self.host, self.port, api_nodes),
+                       headers=headers,
+                       verify=False) # don't check ssl
      try:
-       parsed_json = json.loads(rjson)
+       parsed_json = r.json()
      except ValueError:
-       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , rjson)
+       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , r.text[:200])
        sys.exit(STATE_UNKNOWN)
 
      # Return unknow if we can't find datas
@@ -180,16 +181,20 @@ class Openshift(object):
 
      api_nodes = self.base_api + 'nodes'
      headers = {"Authorization": 'Bearer %s' % self.token}
-     conn = httplib.HTTPSConnection(self.host, self.port)
-     conn.request("GET", api_nodes, "", headers)
-     r1 = conn.getresponse()
-     rjson = r1.read()
-     conn.close()
+     r = requests.get('https://%s:%s%s' % (self.host, self.port, api_nodes),
+                       headers=headers,
+                       verify=False) # don't check ssl
      try:
-       parsed_json = json.loads(rjson)
+       parsed_json = r.json()
      except ValueError:
-       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , rjson)
+       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , r.text[:200])
        sys.exit(STATE_UNKNOWN)
+
+     # Return unknow if we can't find datas
+     if not 'items' in parsed_json:
+         self.os_STATE = STATE_UNKNOWN
+         self.os_OUTPUT_MESSAGE = ' Unable to find nodes data in the response.'
+         return
 
      # Return unknow if we can't find datas
      if not 'items' in parsed_json:
@@ -227,15 +232,13 @@ class Openshift(object):
      api_pods = '%snamespaces/%s/pods' % (self.base_api, self.namespace)
 
      headers = {"Authorization": 'Bearer %s' % self.token}
-     conn = httplib.HTTPSConnection(self.host, self.port)
-     conn.request("GET", api_pods, "", headers)
-     r1 = conn.getresponse()
-     rjson = r1.read()
-     conn.close()
+     r = requests.get('https://%s:%s%s' % (self.host, self.port, api_pods),
+                       headers=headers,
+                       verify=False) # don't check ssl
      try:
-       parsed_json = json.loads(rjson)
+       parsed_json = r.json()
      except ValueError:
-       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN], api_pods, rjson)
+       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN], api_pods, r.text[:200])
        sys.exit(STATE_UNKNOWN)
 
      pods = {}
@@ -292,13 +295,15 @@ class Openshift(object):
      self.os_OUTPUT_MESSAGE += ' Nodes: '
 
      api_nodes = self.base_api + 'nodes'
-     headers = {"Authorization": 'Bearer ' + self.token}
-     conn = httplib.HTTPSConnection(self.host, self.port)
-     conn.request("GET", api_nodes, "", headers)
-     r1 = conn.getresponse()
-     rjson = r1.read()
-     conn.close()
-     parsed_json = json.loads(rjson)
+     headers = {"Authorization": 'Bearer %s' % self.token}
+     r = requests.get('https://%s:%s%s' % (self.host, self.port, api_nodes),
+                       headers=headers,
+                       verify=False) # don't check ssl
+     try:
+       parsed_json = r.json()
+     except ValueError:
+       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , r.text[:200])
+       sys.exit(STATE_UNKNOWN)
 
      # Return unknow if we can't find datas
      if not 'items' in parsed_json:
