@@ -39,51 +39,37 @@ OUTPUT_MESSAGE = ''
 
 PARSER = argparse.ArgumentParser(description='Openshift check pods')
 PARSER.add_argument("-proto", "--protocol", type=str,
-                    required=False,
                     help='Protocol openshift (Default : https)',
                     default="https")
 PARSER.add_argument("-api", "--base_api", type=str,
-                    required=False,
                     help='Url api and version (Default : /api/v1/)',
                     default="/api/v1/")
 PARSER.add_argument("-H", "--host", type=str,
-                    required=False,
                     help='Host openshift (Default : 127.0.0.1)',
                     default="127.0.0.1")
 PARSER.add_argument("-P", "--port", type=str,
-                    required=False,
                     help='Port openshift (Default : 8443)',
                     default=8443)
 PARSER.add_argument("-u", "--username", type=str,
-                    required=False,
                     help='Username openshift (ex : sensu)')
 PARSER.add_argument("-p", "--password", type=str,
-                    required=False,
                     help='Password openshift')
 PARSER.add_argument("-to", "--token", type=str,
-                    required=False,
                     help='File with token openshift (like -t)')
 PARSER.add_argument("-tf", "--tokenfile", type=str,
-                    required=False,
                     help='Token openshift (use token or user/pass')
 PARSER.add_argument("--check_nodes", action='store_true',
-                    required=False,
                     help='Check status of all nodes')
 PARSER.add_argument("--check_pods", action='store_true',
-                    required=False,
                     help='Check status of pods ose-haproxy-router and ose-docker-registry')
 PARSER.add_argument("--check_scheduling", action='store_true',
-                    required=False,
                     help='Check if your nodes is in SchedulingDisabled stat. Only warning')
 PARSER.add_argument("--check_labels", action='store_true',
-                    required=False,
                     help='Check if your nodes have your "OFFLINE" label. Only warning (define by --label_offline)')
 PARSER.add_argument("--label_offline", type=str,
-                    required=False,
                     help='Your "OFFLINE" label name (Default: retiring)',
                     default="retiring")
 PARSER.add_argument("-v", "--version", action='store_true',
-                    required=False,
                     help='Print script version')
 ARGS = PARSER.parse_args()
 
@@ -148,7 +134,7 @@ class Openshift(object):
      self.os_OUTPUT_MESSAGE += ' Nodes: '
 
      api_nodes = self.base_api + 'nodes'
-     headers = {"Authorization": 'Bearer ' + self.token}
+     headers = {"Authorization": 'Bearer %s' % self.token}
      conn = httplib.HTTPSConnection(self.host, self.port)
      conn.request("GET", api_nodes, "", headers)
      r1 = conn.getresponse()
@@ -163,7 +149,7 @@ class Openshift(object):
 
      all_nodes_names=''
      for item in parsed_json["items"]:
-       all_nodes_names+=item["metadata"]["name"] + ' '
+       all_nodes_names += '%s ' % item["metadata"]["name"]
 
        #print item["metadata"]["name"]
        #print item["status"]["addresses"][0]["address"]
@@ -175,7 +161,8 @@ class Openshift(object):
          if item["spec"]["unschedulable"]:
            self.os_STATE = 1
            schedule_flag = True
-           self.os_OUTPUT_MESSAGE += "%s/%s: [SchedulingDisabled] " % (item["metadata"]["name"], item["status"]["addresses"][0]["address"])
+           self.os_OUTPUT_MESSAGE += "%s/%s: [SchedulingDisabled] " % (item["metadata"]["name"],
+                                                                       item["status"]["addresses"][0]["address"])
        except:
          schedule_flag = False
 
@@ -187,7 +174,7 @@ class Openshift(object):
      self.os_OUTPUT_MESSAGE += ' Nodes: '
 
      api_nodes = self.base_api + 'nodes'
-     headers = {"Authorization": 'Bearer ' + self.token}
+     headers = {"Authorization": 'Bearer %s' % self.token}
      conn = httplib.HTTPSConnection(self.host, self.port)
      conn.request("GET", api_nodes, "", headers)
      r1 = conn.getresponse()
@@ -202,7 +189,7 @@ class Openshift(object):
 
      all_nodes_names=''
      for item in parsed_json["items"]:
-       all_nodes_names+=item["metadata"]["name"] + ' '
+       all_nodes_names += '%s ' % item["metadata"]["name"]
 
        #print item["metadata"]["name"]
        #print item["status"]["addresses"][0]["address"]
@@ -213,7 +200,10 @@ class Openshift(object):
        #if status not ready
        if item["status"]["conditions"][0]["status"] != "True":
           self.os_STATE = 2
-          self.os_OUTPUT_MESSAGE += "%s/%s: [%s %s] " % (item["metadata"]["name"], item["status"]["addresses"][0]["address"], item["status"]["conditions"][0]["status"], item["status"]["conditions"][0]["reason"])
+          self.os_OUTPUT_MESSAGE += "%s/%s: [%s %s] " % (item["metadata"]["name"],
+                                                         item["status"]["addresses"][0]["address"],
+                                                         item["status"]["conditions"][0]["status"],
+                                                         item["status"]["conditions"][0]["reason"])
      
      if self.os_STATE == 0:
         self.os_OUTPUT_MESSAGE += "%s [Ready]" % (all_nodes_names)
@@ -224,9 +214,9 @@ class Openshift(object):
 
      if namespace:
          self.namespace = namespace
-     api_pods = self.base_api + 'namespaces/' + self.namespace + '/pods'
+     api_pods = '%snamespaces/%s/pods' % (self.base_api, self.namespace)
 
-     headers = {"Authorization": 'Bearer ' + self.token}
+     headers = {"Authorization": 'Bearer %s' % self.token}
      conn = httplib.HTTPSConnection(self.host, self.port)
      conn.request("GET", api_pods, "", headers)
      r1 = conn.getresponse()
@@ -254,11 +244,14 @@ class Openshift(object):
        try:
          if item["status"][status_condition][0]["status"] != "True":
             if 'deploymentconfig' in item["metadata"]["labels"].keys():
-              pods[item["metadata"]["labels"]["deploymentconfig"]] = "%s: [%s] " % (item["metadata"]["name"], item["status"]["phase"], item["status"][status_condition][0]["status"] )
+              pods[item["metadata"]["labels"]["deploymentconfig"]] = "%s: [%s] " % (item["metadata"]["name"],
+                                                                                    item["status"]["phase"],
+                                                                                    item["status"][status_condition][0]["status"])
               self.os_STATE = 2
          else:
             if 'deploymentconfig' in item["metadata"]["labels"].keys():
-              pods[item["metadata"]["labels"]["deploymentconfig"]] = "%s: [%s] " % (item["metadata"]["name"], item["status"]["phase"])
+              pods[item["metadata"]["labels"]["deploymentconfig"]] = "%s: [%s] " % (item["metadata"]["name"],
+                                                                                    item["status"]["phase"])
        except:
          pass
 
@@ -268,13 +261,13 @@ class Openshift(object):
      if registry_dc_name in pods:
         self.os_OUTPUT_MESSAGE += pods[registry_dc_name]
      else:
-        self.os_OUTPUT_MESSAGE += registry_dc_name + ' [Missing] '
+        self.os_OUTPUT_MESSAGE += '%s [Missing] ' % registry_dc_name
         self.os_STATE = 2
 
      if router_dc_name in pods:
         self.os_OUTPUT_MESSAGE += pods[router_dc_name]
      else:
-        self.os_OUTPUT_MESSAGE += router_dc_name + ' [Missing] '
+        self.os_OUTPUT_MESSAGE += '%s [Missing] ' % router_dc_name
         self.os_STATE = 2
 
 
@@ -293,7 +286,7 @@ class Openshift(object):
 
      all_nodes_names=''
      for item in parsed_json["items"]:
-       all_nodes_names+=item["metadata"]["name"] + ' '
+       all_nodes_names += '%s ' % item["metadata"]["name"]
 
        #print item["metadata"]["labels"]["region"]
        #print item["status"]["addresses"][0]["address"]
@@ -303,10 +296,12 @@ class Openshift(object):
        #if status not ready
        if label_offline in item["metadata"]["labels"].keys():
           self.os_STATE = 1 #just warning
-          self.os_OUTPUT_MESSAGE += "%s/%s: [Label: %s] " % (item["metadata"]["name"], item["status"]["addresses"][0]["address"], label_offline)
+          self.os_OUTPUT_MESSAGE += "%s/%s: [Label: %s] " % (item["metadata"]["name"],
+                                                             item["status"]["addresses"][0]["address"],
+                                                             label_offline)
      
      if self.os_STATE == 0:
-        self.os_OUTPUT_MESSAGE += all_nodes_names + '[schedulable]'
+        self.os_OUTPUT_MESSAGE += '%s[schedulable]' % all_nodes_names
 
 
 if __name__ == "__main__":
@@ -318,11 +313,24 @@ if __name__ == "__main__":
       sys.exit(0)
 
    if ARGS.token:
-      myos = Openshift(host=ARGS.host, port=ARGS.port, token=ARGS.token, proto=ARGS.protocol, base_api=ARGS.base_api)
+      myos = Openshift(host=ARGS.host,
+                       port=ARGS.port,
+                       token=ARGS.token,
+                       proto=ARGS.protocol,
+                       base_api=ARGS.base_api)
    elif ARGS.tokenfile:
-      myos = Openshift(host=ARGS.host, port=ARGS.port, tokenfile=ARGS.tokenfile, proto=ARGS.protocol, base_api=ARGS.base_api)
+      myos = Openshift(host=ARGS.host,
+                       port=ARGS.port,
+                       tokenfile=ARGS.tokenfile,
+                       proto=ARGS.protocol,
+                       base_api=ARGS.base_api)
    elif ARGS.username and ARGS.password:
-      myos = Openshift(host=ARGS.host, port=ARGS.port, username=ARGS.username, password=ARGS.password, proto=ARGS.protocol, base_api=ARGS.base_api)
+      myos = Openshift(host=ARGS.host,
+                       port=ARGS.port,
+                       username=ARGS.username,
+                       password=ARGS.password,
+                       proto=ARGS.protocol,
+                       base_api=ARGS.base_api)
    else:
       PARSER.print_help()
       sys.exit(STATE_UNKNOWN)
