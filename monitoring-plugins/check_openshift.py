@@ -132,13 +132,10 @@ class Openshift(object):
        self.os_STATE = 2
        return "tokenfile-inaccessible"
 
-  def get_scheduling(self):
+  def get_json(self, url):
 
-     self.os_OUTPUT_MESSAGE += ' Nodes: '
-
-     api_nodes = self.base_api + 'nodes'
      headers = {"Authorization": 'Bearer %s' % self.token}
-     r = requests.get('https://%s:%s%s' % (self.host, self.port, api_nodes),
+     r = requests.get('https://%s:%s%s' % (self.host, self.port, url),
                        headers=headers,
                        verify=False) # don't check ssl
      try:
@@ -146,6 +143,16 @@ class Openshift(object):
      except ValueError:
        print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , r.text[:200])
        sys.exit(STATE_UNKNOWN)
+
+     return parsed_json
+
+
+  def get_scheduling(self):
+
+     self.os_OUTPUT_MESSAGE += ' Nodes: '
+
+     api_nodes = self.base_api + 'nodes'
+     parsed_json = self.get_json(api_nodes)
 
      # Return unknow if we can't find datas
      if not 'items' in parsed_json:
@@ -180,15 +187,7 @@ class Openshift(object):
      self.os_OUTPUT_MESSAGE += ' Nodes: '
 
      api_nodes = self.base_api + 'nodes'
-     headers = {"Authorization": 'Bearer %s' % self.token}
-     r = requests.get('https://%s:%s%s' % (self.host, self.port, api_nodes),
-                       headers=headers,
-                       verify=False) # don't check ssl
-     try:
-       parsed_json = r.json()
-     except ValueError:
-       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , r.text[:200])
-       sys.exit(STATE_UNKNOWN)
+     parsed_json = self.get_json(api_nodes)
 
      # Return unknow if we can't find datas
      if not 'items' in parsed_json:
@@ -231,15 +230,7 @@ class Openshift(object):
          self.namespace = namespace
      api_pods = '%snamespaces/%s/pods' % (self.base_api, self.namespace)
 
-     headers = {"Authorization": 'Bearer %s' % self.token}
-     r = requests.get('https://%s:%s%s' % (self.host, self.port, api_pods),
-                       headers=headers,
-                       verify=False) # don't check ssl
-     try:
-       parsed_json = r.json()
-     except ValueError:
-       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN], api_pods, r.text[:200])
-       sys.exit(STATE_UNKNOWN)
+     parsed_json = self.get_json(api_pods)
 
      pods = {}
 
@@ -295,15 +286,7 @@ class Openshift(object):
      self.os_OUTPUT_MESSAGE += ' Nodes: '
 
      api_nodes = self.base_api + 'nodes'
-     headers = {"Authorization": 'Bearer %s' % self.token}
-     r = requests.get('https://%s:%s%s' % (self.host, self.port, api_nodes),
-                       headers=headers,
-                       verify=False) # don't check ssl
-     try:
-       parsed_json = r.json()
-     except ValueError:
-       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , r.text[:200])
-       sys.exit(STATE_UNKNOWN)
+     parsed_json = self.get_json(api_nodes)
 
      # Return unknow if we can't find datas
      if not 'items' in parsed_json:
