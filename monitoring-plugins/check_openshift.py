@@ -45,8 +45,8 @@ PARSER.add_argument("-proto", "--protocol", type=str,
                     help='Protocol openshift (Default : https)',
                     default="https")
 PARSER.add_argument("-api", "--base_api", type=str,
-                    help='Url api and version (Default : /api/v1/)',
-                    default="/api/v1/")
+                    help='Url api and version (Default : /api/v1)',
+                    default="/api/v1")
 PARSER.add_argument("-H", "--host", type=str,
                     help='Host openshift (Default : 127.0.0.1)',
                     default="127.0.0.1")
@@ -92,7 +92,7 @@ class Openshift(object):
                debug=False,
                verbose=False,
                namespace='default',
-               base_api='/api/v1/'):
+               base_api='/api/v1'):
 
      self.os_STATE = 0
      self.os_OUTPUT_MESSAGE = ''
@@ -105,7 +105,8 @@ class Openshift(object):
      self.debug     = debug
      self.verbose   = verbose
      self.namespace = namespace
-     self.base_api  = base_api
+     # Remove the trailing / to avoid user issue
+     self.base_api  = base_api.rstrip('/')
 
      if token:
          self.token = token
@@ -151,7 +152,7 @@ class Openshift(object):
 
      self.os_OUTPUT_MESSAGE += ' Nodes: '
 
-     api_nodes = self.base_api + 'nodes'
+     api_nodes = '%s/nodes' % self.base_api
      parsed_json = self.get_json(api_nodes)
 
      # Return unknow if we can't find datas
@@ -186,7 +187,7 @@ class Openshift(object):
 
      self.os_OUTPUT_MESSAGE += ' Nodes: '
 
-     api_nodes = self.base_api + 'nodes'
+     api_nodes = '%s/nodes' % self.base_api
      parsed_json = self.get_json(api_nodes)
 
      # Return unknow if we can't find datas
@@ -228,13 +229,13 @@ class Openshift(object):
 
      if namespace:
          self.namespace = namespace
-     api_pods = '%snamespaces/%s/pods' % (self.base_api, self.namespace)
+     api_pods = '%s/namespaces/%s/pods' % (self.base_api, self.namespace)
 
      parsed_json = self.get_json(api_pods)
 
      pods = {}
 
-     if self.base_api == '/api/v1beta3/':
+     if self.base_api == '/api/v1beta3':
         status_condition = 'Condition'
      else:
         status_condition = 'conditions'
@@ -285,7 +286,7 @@ class Openshift(object):
 
      self.os_OUTPUT_MESSAGE += ' Nodes: '
 
-     api_nodes = self.base_api + 'nodes'
+     api_nodes = '%s/nodes' % self.base_api
      parsed_json = self.get_json(api_nodes)
 
      # Return unknow if we can't find datas
