@@ -323,28 +323,18 @@ if __name__ == "__main__":
       print "version: %s" % (VERSION)
       sys.exit(0)
 
-   if ARGS.token:
-      myos = Openshift(host=ARGS.host,
-                       port=ARGS.port,
-                       token=ARGS.token,
-                       proto=ARGS.protocol,
-                       base_api=ARGS.base_api)
-   elif ARGS.tokenfile:
-      myos = Openshift(host=ARGS.host,
-                       port=ARGS.port,
-                       tokenfile=ARGS.tokenfile,
-                       proto=ARGS.protocol,
-                       base_api=ARGS.base_api)
-   elif ARGS.username and ARGS.password:
-      myos = Openshift(host=ARGS.host,
-                       port=ARGS.port,
-                       username=ARGS.username,
-                       password=ARGS.password,
-                       proto=ARGS.protocol,
-                       base_api=ARGS.base_api)
-   else:
+   if not ARGS.token and not ARGS.tokenfile and not (ARGS.username and ARGS.password):
       PARSER.print_help()
       sys.exit(STATE_UNKNOWN)
+
+   myos = Openshift(host=ARGS.host,
+                    port=ARGS.port,
+                    username=ARGS.username,
+                    password=ARGS.password,
+                    token=ARGS.token,
+                    tokenfile=ARGS.tokenfile,
+                    proto=ARGS.protocol,
+                    base_api=ARGS.base_api)
 
    if ARGS.check_nodes:
       myos.get_nodes()
