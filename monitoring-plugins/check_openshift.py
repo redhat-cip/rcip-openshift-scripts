@@ -175,11 +175,10 @@ class Openshift(object):
             try:
                 if item["spec"]["unschedulable"]:
                     self.os_STATE = 1
-                    schedule_flag = True
                     self.os_OUTPUT_MESSAGE += ("%s/%s: [SchedulingDisabled] "
                                                % (item["metadata"]["name"], item["status"]["addresses"][0]["address"]))
-            except:
-                schedule_flag = False
+            except KeyError:
+                continue
 
         if self.os_STATE == 0:
             self.os_OUTPUT_MESSAGE += "%s [Schedulable]" % (all_nodes_names)
