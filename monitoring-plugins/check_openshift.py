@@ -142,7 +142,7 @@ class Openshift(object):
      try:
        parsed_json = r.json()
      except ValueError:
-       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN],api_nodes , r.text[:200])
+       print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN], url, r.text[:200])
        sys.exit(STATE_UNKNOWN)
 
      return parsed_json
