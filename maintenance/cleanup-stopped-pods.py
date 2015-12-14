@@ -29,5 +29,5 @@ for cont in containers:
         continue
     dt = datetime.datetime.strptime(blah, "%Y-%m-%dT%H:%M:%S")
 
-    if not ((dt + datetime.timedelta(**expires)) < datetime.datetime.now()):
+    if (dt + datetime.timedelta(**expires)) < datetime.datetime.now():
         print(insp['Id'])
