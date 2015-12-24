@@ -52,14 +52,10 @@ fi
 
 
 . /root/.etcd.bashrc
-if [ -z "$ETCDCTL" ]; then
-  echo '$ETCDCTL alias not present (check /root/.etcd.bashrc)' >&2
-  exit 2
-fi
 
-$ETCDCTL cluster-health
+etcdctl cluster-health
 
-if $ETCDCTL cluster-health | grep unhealthy; then
+if etcdctl cluster-health | grep unhealthy; then
   echo 'one etcd node is unhealthy, please fix first' >&2
   exit 2
 fi
@@ -123,8 +119,8 @@ ssh ${node} chmod 700 /etc/etcd
 ssh ${node} 'semanage fcontext --add -t etc_t "/etc/etcd(/.*)?"'
 ssh ${node} restorecon -R -v  /etc/etcd
 
-$ETCDCTL cluster-health
-$ETCDCTL member list
+etcdctl cluster-health
+etcdctl member list
 
 tmpconf=$(mktemp)
 cat > $tmpconf <<EOF
@@ -144,7 +140,7 @@ ETCD_PEER_CERT_FILE=/etc/etcd/peer.crt
 ETCD_PEER_KEY_FILE=/etc/etcd/peer.key
 EOF
 
-$ETCDCTL member add ${node} https://${_ip}:2380|egrep '^ETCD_' >> $tmpconf
+etcdctl member add ${node} https://${_ip}:2380|egrep '^ETCD_' >> $tmpconf
 
 scp $tmpconf ${node}:/etc/etcd/etcd.conf
 ssh ${node} cp -r /var/lib/etcd /var/lib/etcd.$(date +%Y%m%d%H%M)
@@ -152,8 +148,8 @@ ssh ${node} rm -rf /var/lib/etcd/*
 ssh ${node} systemctl start etcd
 
 sleep 5
-$ETCDCTL member list
-$ETCDCTL cluster-health
+etcdctl member list
+etcdctl cluster-health
 
 rm $tmpconf
 rm -rf $dir
