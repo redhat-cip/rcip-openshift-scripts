@@ -16,7 +16,7 @@ with open(os.path.join(basedir, 'master-config.yaml'), 'r') as stream:
     print('export etcd_ca=' + os.path.join(basedir, clientconf['ca']))
     print('export etcd_certFile=' + os.path.join(basedir, clientconf['certFile']))
     print('export etcd_keyFile=' + os.path.join(basedir, clientconf['keyFile']))
-    print('export etcd_url=' + clientconf['urls'][0])
+    print('export etcd_url=' + ','.join(clientconf['urls']))
     try:
         stor = conf['etcdConfig']['storageDirectory']
     except:
