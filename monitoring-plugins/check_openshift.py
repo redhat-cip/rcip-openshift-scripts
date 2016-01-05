@@ -28,7 +28,7 @@ import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-from requests.exceptions import *
+from requests.exceptions import ConnectionError
 
 VERSION = '1.1'
 
