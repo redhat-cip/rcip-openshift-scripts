@@ -28,6 +28,8 @@ import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+from requests.exceptions import *
+
 VERSION = '1.1'
 
 STATE_OK = 0
@@ -138,14 +140,17 @@ class Openshift(object):
     def get_json(self, url):
 
         headers = {"Authorization": 'Bearer %s' % self.token}
-        r = requests.get('https://%s:%s%s' % (self.host, self.port, url),
-                         headers=headers,
-                         verify=False)  # don't check ssl
         try:
+            r = requests.get('https://%s:%s%s' % (self.host, self.port, url),
+                             headers=headers,
+                             verify=False)  # don't check ssl
             parsed_json = r.json()
         except ValueError:
             print "%s: GET %s %s" % (STATE_TEXT[STATE_UNKNOWN], url, r.text[:200])
             sys.exit(STATE_UNKNOWN)
+        except ConnectionError as e:
+            print "https://%s:%s%s - %s" % (self.host, self.port, url, e)
+            sys.exit(STATE_CRITICAL)
 
         return parsed_json
 
