@@ -32,10 +32,12 @@ for cont in containers:
     #print mem_limit
     #print percent
 
-    pods[cont['Names'][0]] = {'mem_usage': mem_usage, 'mem_limit': mem_limit, 'percent': percent}
+    namespace = cont['Labels']['io.kubernetes.pod.name'].split('/')[0]
+
+    pods[cont['Names'][0]] = {'mem_usage': mem_usage, 'mem_limit': mem_limit, 'percent': percent, 'namespace': namespace}
 
 
 for key, value in sorted(pods.iteritems(), key=lambda kvt: kvt[1]['percent'], reverse=True):
   mem_usage_GB = (value['mem_usage']/1024/1024/1024)
   mem_limit_GB = (value['mem_limit']/1024/1024/1024)
-  print ("[%s%%  %s GB/%s GB]  %s") % (value['percent'], mem_usage_GB, mem_limit_GB, key)
+  print ("[%s%%  %s GB/%s GB]  %s %s") % (value['percent'], mem_usage_GB, mem_limit_GB, value['namespace'], key)
