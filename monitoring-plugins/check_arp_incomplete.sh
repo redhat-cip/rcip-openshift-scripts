@@ -26,58 +26,54 @@ print_version() {
 }
 
 print_usage() {
-	echo "Usage: $PROGNAME -i"
-	echo ""
-	echo "-h Show this page"
-	echo "-v Script version"
-	echo "-i --incomplete check if we have incomplete ARP"
+    echo "Usage: $PROGNAME -i"
+    echo ""
+    echo "-h Show this page"
+    echo "-v Script version"
+    echo "-i --incomplete check if we have incomplete ARP"
 }
 
 print_help() {
-	print_version
-	echo ""
-	print_usage
-        echo ""
-	exit 0
+    print_version
+    echo
+    print_usage
+    echo
+    exit 0
 }
 
 check_incomplete() {
-  #check the number of incomplete ARP
-  ARP_INCOMPLETE=`arp -a | grep incomplete | wc -l`
-  if [ "$ARP_INCOMPLETE" -gt "0" ]; then
-    echo "ARP CRITICAL : ${ARP_INCOMPLETE} incomplete"
-    exit $STATE_CRITICAL
-  else 
-  	echo "ARP OK : 0 incomplete"
-  	exit $STATE_OK
-  fi
+    #check the number of incomplete ARP
+    ARP_INCOMPLETE=`arp -a | grep incomplete | wc -l`
+    if [ "$ARP_INCOMPLETE" -gt "0" ]; then
+        echo "ARP CRITICAL : ${ARP_INCOMPLETE} incomplete"
+        exit $STATE_CRITICAL
+    else
+        echo "ARP OK : 0 incomplete"
+        exit $STATE_OK
+    fi
 }
 
 # -------------------------------------------------------------------------------------
 # Grab the command line arguments
 # -------------------------------------------------------------------------------------
 while [ $# -gt 0 ]; do
-	case "$1" in
-		-h | --help)
-            	print_help
-            	exit $STATE_OK
-            	;;
-       	-v | --version)
-                print_version
-                exit $STATE_OK
-                ;;
-		-i | --incomplete)
-		check_incomplete
-		;;
-		*)  echo "Unknown argument: $1"
-            	print_usage
-            	exit $STATE_UNKNOWN
-            	;;
-		esac
-	shift
+    case "$1" in
+        -h | --help)
+            print_help
+            exit $STATE_OK
+            ;;
+        -v | --version)
+            print_version
+            exit $STATE_OK
+            ;;
+        -i | --incomplete)
+            check_incomplete
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            print_usage
+            exit $STATE_UNKNOWN
+            ;;
+    esac
+    shift
 done
-
-
-# -----------------------------------------------------------------------------------------
-# -----------------------------------------------------------------------------------------
-
