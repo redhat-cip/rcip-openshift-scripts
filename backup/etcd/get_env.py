@@ -8,7 +8,7 @@ import os
 if len(sys.argv) == 2:
     basedir = sys.argv[1]
 else:
-    basedir = '/etc/openshift/master'
+    basedir = '/etc/origin/master'
 
 with open(os.path.join(basedir, 'master-config.yaml'), 'r') as stream:
     conf = yaml.load(stream)
