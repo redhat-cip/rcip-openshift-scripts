@@ -66,7 +66,7 @@ PARSER.add_argument("-tf", "--tokenfile", type=str,
 PARSER.add_argument("--check_nodes", action='store_true',
                     help='Check status of all nodes')
 PARSER.add_argument("--check_pods", action='store_true',
-                    help='Check status of pods ose-haproxy-router and ose-docker-registry')
+                    help='Check status of pods in the default namespace - router & registry')
 PARSER.add_argument("--check_scheduling", action='store_true',
                     help='Check if your nodes is in SchedulingDisabled stat. Only warning')
 PARSER.add_argument("--check_labels", action='store_true',
@@ -224,62 +224,40 @@ class Openshift(object):
 
     def get_pods(self, namespace=None):
 
-        self.os_OUTPUT_MESSAGE += ' Pods: '
-
         if namespace:
             self.namespace = namespace
-        api_pods = '%s/namespaces/%s/pods' % (self.base_api, self.namespace)
+        api_pods = '%s/namespaces/%s/replicationcontrollers' % (self.base_api, self.namespace)
 
+        self.os_STATE = STATE_OK
+        warning_pods = ''
+        critical_pods = ''
         parsed_json = self.get_json(api_pods)
 
-        pods = {}
-
-        if self.base_api == '/api/v1beta3':
-            status_condition = 'Condition'
-        else:
-            status_condition = 'conditions'
-
-        # Return unknow if we can't find datas
-        if 'items' not in parsed_json:
-            self.os_STATE = STATE_UNKNOWN
-            self.os_OUTPUT_MESSAGE = ' Unable to find nodes data in the response.'
-            return
-
-        for item in parsed_json["items"]:
-            # print item["metadata"]["name"]
-            # print item["metadata"]["labels"]["deploymentconfig"]
-            # print item["status"]["phase"]
-            # print item["status"][status_condition][0]["type"]
-            # print item["status"][status_condition][0]["status"]
-
+        for item in parsed_json['items']:
             try:
-                if item["status"][status_condition][0]["status"] != "True":
-                    if 'deploymentconfig' in item["metadata"]["labels"].keys():
-                        pods[item["metadata"]["labels"]["deploymentconfig"]] = "%s: [%s] " % (item["metadata"]["name"],
-                                                                                              item["status"]["phase"],
-                                                                                              item["status"][status_condition][0]["status"])
-                        self.os_STATE = 2
-                else:
-                    if 'deploymentconfig' in item["metadata"]["labels"].keys():
-                        pods[item["metadata"]["labels"]["deploymentconfig"]] = "%s: [%s] " % (item["metadata"]["name"],
-                                                                                         item["status"]["phase"])
-            except:
+                name = item['metadata']['name']
+                status = item['status']['replicas']
+                spec = item['spec']['replicas']
+            except KeyError, e:
+                if self.os_STATE != STATE_CRITICAL:
+                    self.os_OUTPUT_MESSAGE += "[Exception while checking pods: %s] " % e
+                    self.os_STATE = STATE_CRITICAL
                 pass
 
-        registry_dc_name = 'docker-registry'
-        router_dc_name = 'router'
+            if status == 0 or spec == 0:
+                critical_pods += "%s (%s vs %s)," % (name, status, spec)
+                self.os_STATE = STATE_CRITICAL
+            elif spec != status:
+                warning_pods += "%s (%s vs %s)," % (name, status, spec)
+                self.os_STATE = STATE_WARNING
 
-        if registry_dc_name in pods:
-            self.os_OUTPUT_MESSAGE += pods[registry_dc_name]
-        else:
-            self.os_OUTPUT_MESSAGE += '%s [Missing] ' % registry_dc_name
-            self.os_STATE = 2
+        if self.os_STATE == STATE_OK:
+            self.os_OUTPUT_MESSAGE += " All pods are running as expected."
+        elif self.os_STATE == STATE_WARNING:
+            self.os_OUTPUT_MESSAGE += " Those pods need attention: %s" % warning_pods
+        elif self.os_STATE == STATE_CRITICAL:
+            self.os_OUTPUT_MESSAGE += " Spec and/or status is 0 for pods: %s" % critical_pods
 
-        if router_dc_name in pods:
-            self.os_OUTPUT_MESSAGE += pods[router_dc_name]
-        else:
-            self.os_OUTPUT_MESSAGE += '%s [Missing] ' % router_dc_name
-            self.os_STATE = 2
 
     def get_labels(self, label_offline):
 
