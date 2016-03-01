@@ -15,7 +15,7 @@ To restore a hot backup, you will have to set the variables :
 
     DAEMON_NAME=origin-master MASTER_CONF=/etc/origin/master /opt/rcip-openshift-scripts/backup/etcd/restore.sh /opt/backup/etcd/hot/201511200900.etcd
 
-By default, variables DAEMON_NAME, MASTER_CONF are set for OSE 3.0.x.
+By default, variables DAEMON_NAME, MASTER_CONF are set for OSE 3.1.x.
 
 For more information on paths and daemon names :
 https://docs.openshift.com/enterprise/3.1/release_notes/ose_3_1_release_notes.html

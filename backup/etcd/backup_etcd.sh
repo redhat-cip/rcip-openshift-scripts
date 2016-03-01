@@ -5,7 +5,7 @@ ORIG=$(cd $(dirname $0); pwd)
 
 # env variables you may want to change
 BACKUPDIR=${BACKUPDIR:-"/opt/backup/etcd"}
-MASTER_CONF=${MASTER_CONF:-"/etc/openshift/master"}
+MASTER_CONF=${MASTER_CONF:-"/etc/origin/master"}
 
 eval $(${ORIG}/get_env.py "${MASTER_CONF}")
 ETCD="etcdctl --cert-file ${etcd_certFile} --key-file ${etcd_keyFile} --ca-file ${etcd_ca} --no-sync --peers ${etcd_url}"

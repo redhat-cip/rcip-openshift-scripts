@@ -4,8 +4,8 @@ set -e
 ORIG=$(cd $(dirname $0); pwd)
 
 # env variables you may want to change
-DAEMON_NAME=${DAEMON_NAME:-"openshift-master"}
-MASTER_CONF=${MASTER_CONF:-"/etc/openshift/master"}
+DAEMON_NAME=${DAEMON_NAME:-"atomic-openshift-master-api"}
+MASTER_CONF=${MASTER_CONF:-"/etc/origin/master"}
 
 eval $(${ORIG}/get_env.py "${MASTER_CONF}")
 
