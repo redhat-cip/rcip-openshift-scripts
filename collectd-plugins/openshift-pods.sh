@@ -3,7 +3,7 @@ HOSTNAME="${COLLECTD_HOSTNAME:-localhost}"
 INTERVAL="${COLLECTD_INTERVAL:-60}"
 
 TOKEN=$(cat $1)
-API_URL='/api/v1beta3'
+API_URL='/api/v1'
 
 nodes=$(curl -s --insecure --header "Authorization: Bearer $TOKEN" https://127.0.0.1:8443$API_URL/nodes |/opt/bin/jq -r '.items[] | .metadata.name')
 
