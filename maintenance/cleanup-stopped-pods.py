@@ -18,7 +18,7 @@ import docker
 
 expires = dict(hours=12)
 
-client = docker.Client(base_url='unix://var/run/docker.sock', timeout=10)
+client = docker.Client(base_url='unix://var/run/docker.sock', version='auto', timeout=10)
 
 containers = client.containers(all=True, filters={'status': 'exited'})
 
