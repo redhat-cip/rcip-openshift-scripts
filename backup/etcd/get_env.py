@@ -17,12 +17,15 @@ with open(os.path.join(basedir, 'master-config.yaml'), 'r') as stream:
     print('export etcd_certFile=' + os.path.join(basedir, clientconf['certFile']))
     print('export etcd_keyFile=' + os.path.join(basedir, clientconf['keyFile']))
     print('export etcd_url=' + ','.join(clientconf['urls']))
+    stor = None
     try:
         stor = conf['etcdConfig']['storageDirectory']
     except:
-        for line in open('/etc/etcd/etcd.conf', 'r'):
-            if re.search('ETCD_DATA_DIR', line):
-                stor = line.replace('ETCD_DATA_DIR=', '').rstrip('\n/')
-                print('export etcd_outside_openshift=yes')
-                break
+        etcdconf = '/etc/etcd/etcd.conf'
+        if os.path.isfile(etcdconf):
+            for line in open(etcdconf, 'r'):
+                if re.search('ETCD_DATA_DIR', line):
+                    stor = line.replace('ETCD_DATA_DIR=', '').rstrip('\n/')
+                    print('export etcd_outside_openshift=yes')
+                    break
     print('export etcd_storage=%s' % stor)
