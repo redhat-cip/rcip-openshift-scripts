@@ -121,3 +121,55 @@ ARP OK : 0 incomplete
 bash check_arp_incomplete.sh -i
 CRITICAL OK : 3 incomplete
 ```
+
+##openshift/check_openshift_rsh.py
+
+Script help
+```bash
+check_openshift_rsh.py -h
+usage: check_openshift_rsh.py [-h] [-proto {http,https}] [-api BASE_API]
+                              [-H HOST] [-P PORT] [-pn PODNAME] [-n NAMESPACE]
+                              [-w WARNING] [-c CRITICAL] [-u USERNAME]
+                              [-p PASSWORD] [-to TOKEN] [-tf TOKENFILE]
+                              [--check_df] [-v]
+
+Openshift check pods
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -proto {http,https}, --protocol {http,https}
+                        Protocol openshift (Default : https)
+  -api BASE_API, --base_api BASE_API
+                        Url api and version (Default : /api/v1)
+  -H HOST, --host HOST  Host openshift (Default : 127.0.0.1)
+  -P PORT, --port PORT  Port openshift (Default : 8443)
+  -pn PODNAME, --podname PODNAME
+                        begining of the pods name
+  -n NAMESPACE, --namespace NAMESPACE
+                        Namespace
+  -w WARNING, --warning WARNING
+                        Warning value (Default : 85)
+  -c CRITICAL, --critical CRITICAL
+                        Critical value (Default : 95)
+  -u USERNAME, --username USERNAME
+                        Username openshift (ex : sensu)
+  -p PASSWORD, --password PASSWORD
+                        Password openshift
+  -to TOKEN, --token TOKEN
+                        File with token openshift (like -t)
+  -tf TOKENFILE, --tokenfile TOKENFILE
+                        Token openshift (use token or user/pass
+  --check_df            Check disk usage in the pod
+  -v, --version         Print script version
+
+```
+
+###Pre-requisite
+
+A valide kubeconfig need to be present in /root/.kube/config
+
+And allow to exec this script in sudoer file 
+
+```bash
+ansible monitoring -m lineinfile -a "line='sensu ALL=(root) NOPASSWD: /usr/bin/python /opt/rcip-openshift-scripts/monitoring-plugins/check_openshift_rsh.py *' dest=/etc/sudoers.d/sensu create=yes"
+```
