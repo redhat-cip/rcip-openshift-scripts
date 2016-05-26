@@ -28,7 +28,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 from requests.exceptions import ConnectionError
 
-VERSION = '1.1'
+VERSION = '1.2'
 
 STATE_OK = 0
 STATE_WARNING = 1
@@ -213,13 +213,13 @@ class Openshift(object):
 
             # cinode: pourcent usage inode
             cinode = int(col[5].rstrip('%'))
-            if self.os_STATE < STATE_CRITICAL:  # CRITICAL
-                self.os_STATE = STATE_WARNING
+            if cinode >= int(self.critical):  # CRITICAL
+                self.os_STATE = STATE_CRITICAL
                 _output_message.append("Disk Inode %s: %s %s Used" % (pod, col[1], col[5]))
             elif cinode >= int(self.warning):  # WARNING
                 # Update state warning only if the current is not critical
-                if cinode >= int(self.critical):
-                    self.os_STATE = STATE_CRITICAL
+                if self.os_STATE < STATE_CRITICAL:
+                    self.os_STATE = STATE_WARNING
                 _output_message.append("Disk Inode %s: %s %s Used" % (pod, col[1], col[5]))
 
         self.os_OUTPUT_MESSAGE += ' || '.join(_output_message)
