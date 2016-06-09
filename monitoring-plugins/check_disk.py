@@ -82,6 +82,8 @@ def check_df(base,warning,critical,excludes):
         # 8: pcent
         if is_excluded(excludes,col[1]):
             continue
+        if not is_based(base,col[1]):
+            continue
         _disk_ok.append(col[1])
 
         # csize: pourcent usage
@@ -117,6 +119,12 @@ def is_excluded(excludes,path):
     for ex in excludes:
         if path.startswith(ex):
             return True
+    return False
+
+def is_based(base,path):
+    #Check if the mount path is in the base path
+    if path.startswith(base):
+        return True
     return False
 
 if __name__ == "__main__":
