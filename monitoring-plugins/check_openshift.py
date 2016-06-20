@@ -30,7 +30,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 from requests.exceptions import ConnectionError
 
-VERSION = '1.1'
+VERSION = '1.2'
 
 STATE_OK = 0
 STATE_WARNING = 1
@@ -76,7 +76,7 @@ PARSER.add_argument("--label_offline", type=str,
                     default="retiring")
 PARSER.add_argument("--check_project_labels", action='store_true',
                     help='Check if your projects have the required labels set (define by --required_project_labels)')
-PARSER.add_argument("--required_project_labels", type=str,
+PARSER.add_argument("--required_project_labels", type=str, nargs='+',
                     help='The names of your required project labels as comma separated list')
 PARSER.add_argument("-v", "--version", action='store_true',
                     help='Print script version')
@@ -318,7 +318,7 @@ class Openshift(object):
         if self.os_STATE == 0:
             self.os_OUTPUT_MESSAGE += '%s[schedulable]' % all_nodes_names
 
-    def get_project_labels(self, required_project_labels):
+    def get_project_labels(self, required_labels):
 
         api_namespaces = '%s/namespaces' % self.base_api
         parsed_json = self.get_json(api_namespaces)
@@ -329,33 +329,25 @@ class Openshift(object):
             self.os_OUTPUT_MESSAGE = ' Unable to find projects data in the response.'
             return
 
-        required_labels = required_project_labels.split(',');
-
-        all_project_names = ''
-        all_project_names_nok = ''
+        all_project_names = []
+        all_project_names_nok = []
         for project in parsed_json["items"]:
-            if all_project_names != '':
-                all_project_names += ', '
-            all_project_names += project["metadata"]["name"]
+            all_project_names.append(project["metadata"]["name"])
             if 'labels' not in project["metadata"]:
-                if all_project_names_nok != '':
-                    all_project_names_nok += ', '
-                all_project_names_nok += project["metadata"]["name"]
+                all_project_names_nok.append(project["metadata"]["name"])
                 self.os_STATE = STATE_CRITICAL
             else:
             	  for required_label in required_labels:
-                    if not required_label in project["metadata"]["labels"].keys():
-            	          if all_project_names_nok != '':
-            	              all_project_names_nok += ', '
-            	          all_project_names_nok += project["metadata"]["name"]
+                      if not required_label in project["metadata"]["labels"].keys():
+                          all_project_names_nok.append(project["metadata"]["name"])
             	          self.os_STATE = STATE_CRITICAL
             	          break
 
         if self.os_STATE == 0:
-            self.os_OUTPUT_MESSAGE += " Project(s) '%s' labeled with '%s'." % (all_project_names, required_project_labels)
+            self.os_OUTPUT_MESSAGE += " Project(s) '%s' labeled with '%s'." % ( ', '.join(all_project_names), ', '.join(required_labels))
 
         if self.os_STATE != 0:
-            self.os_OUTPUT_MESSAGE += " Project(s) '%s' not labeled with '%s'." % (all_project_names_nok, required_project_labels)
+            self.os_OUTPUT_MESSAGE += " Project(s) '%s' not labeled with '%s'." % ( ', '.join(all_project_names_nok), ', '.join(required_labels))
 
 if __name__ == "__main__":
 
