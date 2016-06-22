@@ -77,7 +77,7 @@ PARSER.add_argument("--label_offline", type=str,
 PARSER.add_argument("--check_project_labels", action='store_true',
                     help='Check if your projects have the required labels set (define by --required_project_labels)')
 PARSER.add_argument("--required_project_labels", type=str, nargs='+',
-                    help='The names of your required project labels as comma separated list')
+                    help='The names of your required project labels as space separated list')
 PARSER.add_argument("-v", "--version", action='store_true',
                     help='Print script version')
 ARGS = PARSER.parse_args()

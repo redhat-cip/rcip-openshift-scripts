@@ -13,7 +13,7 @@ If you didn't have token, use user/pass to perform an "oc login" and get a token
   * check_pods : Request status of pods (with deployconfig : docker-registry and router)
   * check_regions : Request regions affected on nodes and return warning if it's  match to your "OFFLINE" region
   * check_scheduling : Find if your nodes have the unschedulable flag (SchedulingDisabledà.
-
+  * check_project_labels : Check if your projects have the required labels set (define by --required_project_labels)
 Script help
 
 ```bash
@@ -21,7 +21,10 @@ usage: check_openshift.py [-h] [-proto PROTOCOL] [-api BASE_API] [-H HOST]
                           [-P PORT] [-u USERNAME] [-p PASSWORD] [-to TOKEN]
                           [-tf TOKENFILE] [--check_nodes] [--check_pods]
                           [--check_scheduling] [--check_labels]
-                          [--label_offline LABEL_OFFLINE] [-v]
+                          [--label_offline LABEL_OFFLINE]
+                          [--check_project_labels]
+                          [--required_project_labels REQUIRED_PROJECT_LABELS [REQUIRED_PROJECT_LABELS ...]]
+                          [-v]
 
 Openshift check pods
 
@@ -30,7 +33,7 @@ optional arguments:
   -proto PROTOCOL, --protocol PROTOCOL
                         Protocol openshift (Default : https)
   -api BASE_API, --base_api BASE_API
-                        Url api and version (Default : /api/v1/)
+                        Url api and version (Default : /api/v1)
   -H HOST, --host HOST  Host openshift (Default : 127.0.0.1)
   -P PORT, --port PORT  Port openshift (Default : 8443)
   -u USERNAME, --username USERNAME
@@ -50,7 +53,14 @@ optional arguments:
                         warning (define by --label_offline)
   --label_offline LABEL_OFFLINE
                         Your "OFFLINE" label name (Default: retiring)
+  --check_project_labels
+                        Check if your projects have the required labels set
+                        (define by --required_project_labels)
+  --required_project_labels REQUIRED_PROJECT_LABELS [REQUIRED_PROJECT_LABELS ...]
+                        The names of your required project labels as space
+                        separated list
   -v, --version         Print script version
+
 ```
 
 We suggest to use a permanant token from a ServiceAccount. Exemple on how create one
