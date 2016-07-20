@@ -20,11 +20,16 @@ expires = dict(hours=12)
 
 client = docker.Client(base_url='unix://var/run/docker.sock', version='auto', timeout=10)
 
-containers = client.containers(all=True, filters={'status': 'exited'})
+containers = client.containers(all=True, filters={'status': ['exited', 'dead']})
 
 for cont in containers:
     insp = client.inspect_container(cont)
     blah = insp['State']['FinishedAt'].split(".")[0]
+
+    if cont["Status"] == "Dead":
+        print(insp['Id'])
+        continue
+
     if blah.startswith("00"):  # WTF
         continue
     dt = datetime.datetime.strptime(blah, "%Y-%m-%dT%H:%M:%S")
