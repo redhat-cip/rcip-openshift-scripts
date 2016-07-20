@@ -30,7 +30,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 from requests.exceptions import ConnectionError
 
-VERSION = '1.2'
+VERSION = '1.3'
 
 STATE_OK = 0
 STATE_WARNING = 1
@@ -215,13 +215,19 @@ class Openshift(object):
             # print item["status"]["conditions"][0]["status"]
             # print item["status"]["conditions"][0]["reason"]
 
+            status_ready = {}
+            for condition in item["status"]["conditions"]:
+                if condition["type"] == "Ready":
+                    status_ready = condition
+                    break
+
             # if status not ready
-            if item["status"]["conditions"][0]["status"] != "True":
+            if status_ready["status"] != "True":
                 self.os_STATE = 2
                 self.os_OUTPUT_MESSAGE += "%s/%s: [%s %s] " % (item["metadata"]["name"],
                                                                item["status"]["addresses"][0]["address"],
-                                                               item["status"]["conditions"][0]["status"],
-                                                               item["status"]["conditions"][0]["reason"])
+                                                               status_ready["status"],
+                                                               status_ready["reason"])
 
         if self.os_STATE == 0:
             self.os_OUTPUT_MESSAGE += "%s [Ready]" % (all_nodes_names)
@@ -337,11 +343,11 @@ class Openshift(object):
                 all_project_names_nok.append(project["metadata"]["name"])
                 self.os_STATE = STATE_CRITICAL
             else:
-            	  for required_label in required_labels:
+                  for required_label in required_labels:
                       if not required_label in project["metadata"]["labels"].keys():
                           all_project_names_nok.append(project["metadata"]["name"])
-            	          self.os_STATE = STATE_CRITICAL
-            	          break
+                          self.os_STATE = STATE_CRITICAL
+                          break
 
         if self.os_STATE == 0:
             self.os_OUTPUT_MESSAGE += " Project(s) '%s' labeled with '%s'." % ( ', '.join(all_project_names), ', '.join(required_labels))
