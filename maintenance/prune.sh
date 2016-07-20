@@ -17,6 +17,8 @@
 #crontab : */30 * * * * bash /opt/rcip-openshift-scripts/maintenance/prune.sh all
 
 LOGFILE='/tmp/prune.log'
+OADM_TMP=$(whereis oadm)
+OADM=${OADM_TMP#* }
 
 function datenow {
     echo $(/usr/bin/date +%Y-%m-%d-%Hh%Mm%S)
@@ -24,9 +26,9 @@ function datenow {
 
 function openshift_prune {
 	echo "$(datenow) openshift-prune builds" >> $LOGFILE
-	/usr/bin/oadm prune builds --confirm  2>&1 >> $LOGFILE
+	$OADM prune builds --confirm  2>&1 >> $LOGFILE
 	echo "$(datenow) openshift-prune deployments" >> $LOGFILE
-	/usr/bin/oadm prune deployments --confirm  2>&1 >> $LOGFILE
+	$OADM prune deployments --confirm  2>&1 >> $LOGFILE
 	#echo "$(datenow) openshift-prune images" >> $LOGFILE
 	#/usr/bin/oadm prune images --confirm  2>&1 >> $LOGFILE
 }
